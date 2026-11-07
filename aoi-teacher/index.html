@@ -314,8 +314,37 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
 
   <div id="cardZone"><div id="card">
 
-  <!-- HUB -->
+  <!-- HUB (top-level modes) -->
   <div id="view-hub">
+    <div class="hubgrid">
+      <button class="hubcard" id="hubCardTeacher" type="button">
+        <span class="badge" style="align-self:flex-start;">Teacher</span>
+        <h3>Learn with Aoi</h3>
+        <p>Narrated, Aoi-led lessons — explained in small beats, with a transcript.</p>
+      </button>
+      <button class="hubcard" id="hubCardQuiz" type="button">
+        <span class="badge" style="align-self:flex-start;">Quiz</span>
+        <h3>Test Yourself</h3>
+        <p id="hubQuizSub">PPL Checkride Prep and General Knowledge, with hints and weak-spot tracking.</p>
+      </button>
+      <button class="hubcard" id="hubCardSinging" type="button">
+        <span class="badge" style="align-self:flex-start;">Singing</span>
+        <h3>Japanese Pronunciation</h3>
+        <p>Mora-timing, pure vowels, and common pitfalls — explained by Aoi, plus a practice log.</p>
+      </button>
+    </div>
+  </div>
+
+  <!-- TEACHER (narrated lessons; honest placeholder — no narrated-video content exists yet) -->
+  <div id="view-teacher" hidden>
+    <div class="jp-section">
+      <h3>No narrated lesson here yet</h3>
+      <p>This is where Aoi's recorded, narrated lessons will live — that pipeline isn't wired up yet, so there's nothing built here right now. The Japanese Pronunciation lesson in Singing mode already works the way a Teacher lesson will: small explained beats, quick checks, and a transcript. For now, head to Quiz to drill real questions, or Singing for that lesson.</p>
+    </div>
+  </div>
+
+  <!-- QUIZ SELECT -->
+  <div id="view-quiz-select" hidden>
     <div class="hubgrid">
       <button class="hubcard" id="hubCardPPL" type="button">
         <span class="badge" style="align-self:flex-start;">PPL Checkride</span>
@@ -326,11 +355,6 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
         <span class="badge" style="align-self:flex-start;">General Knowledge</span>
         <h3>105-Topic Study List</h3>
         <p id="hubGKSub">Working through your full topic list, one subject at a time, in your chosen order.</p>
-      </button>
-      <button class="hubcard" id="hubCardJP" type="button">
-        <span class="badge" style="align-self:flex-start;">Japanese</span>
-        <h3>Pronunciation for Singing</h3>
-        <p>A reference guide to mora-timing, pure vowels, and common pronunciation pitfalls, plus a practice log.</p>
       </button>
     </div>
   </div>
@@ -1434,6 +1458,8 @@ function pct(n){ return Math.round(n); }
 /* ---------- view switching ---------- */
 var views = {
   hub: document.getElementById("view-hub"),
+  teacher: document.getElementById("view-teacher"),
+  quizSelect: document.getElementById("view-quiz-select"),
   subjectHome: document.getElementById("view-subject-home"),
   quiz: document.getElementById("view-quiz"),
   results: document.getElementById("view-results"),
@@ -1457,15 +1483,33 @@ function showView(name, opts){
   document.getElementById("cardZone").scrollTop = 0; /* #cardZone scrolls now, not the page */
 }
 document.getElementById("btnBack").addEventListener("click", function(){
-  if (backTarget === "subjectHome" && activeSubject){ renderSubjectHome(); showView("subjectHome"); }
+  if (backTarget === "subjectHome" && activeSubject){ renderSubjectHome(); showView("subjectHome", {backTo:"quizSelect"}); }
+  else if (backTarget === "quizSelect"){ renderQuizSelect(); showView("quizSelect", {backTo:"hub"}); }
   else { renderHub(); showView("hub"); }
 });
 
 
-/* ---------- hub ---------- */
+/* ---------- hub (top-level: Teacher / Quiz / Singing) ---------- */
 function renderHub(){
-  document.getElementById("brandKicker").textContent = "Study Hub";
-  document.getElementById("brandTitle").textContent = "Study Hub";
+  document.getElementById("brandKicker").textContent = "Aoi Explains";
+  document.getElementById("brandTitle").textContent = "Aoi Explains";
+
+  var pplAns = loadAnswers(SUBJECTS.ppl);
+  var pplAnswered = 0;
+  SUBJECTS.ppl.questions.forEach(function(q){ if (Object.prototype.hasOwnProperty.call(pplAns, q.id)) pplAnswered++; });
+  var gkAns = loadAnswers(SUBJECTS.gk);
+  var gkAnswered = 0;
+  SUBJECTS.gk.questions.forEach(function(q){ if (Object.prototype.hasOwnProperty.call(gkAns, q.id)) gkAnswered++; });
+  var totalAnswered = pplAnswered + gkAnswered;
+  document.getElementById("hubQuizSub").textContent = totalAnswered
+    ? (totalAnswered + " questions answered so far across PPL Checkride Prep and General Knowledge.")
+    : "PPL Checkride Prep and General Knowledge, with hints and weak-spot tracking.";
+}
+
+/* ---------- quiz select (PPL / GK) ---------- */
+function renderQuizSelect(){
+  document.getElementById("brandKicker").textContent = "Quiz";
+  document.getElementById("brandTitle").textContent = "Pick a Subject";
 
   var pplAns = loadAnswers(SUBJECTS.ppl);
   var pplTotal = SUBJECTS.ppl.questions.length;
@@ -1480,9 +1524,12 @@ function renderHub(){
   document.getElementById("hubGKSub").textContent = gkBuiltCount + " of " + MASTER_TOPICS.length + " topics built so far (" + SUBJECTS.gk.questions.length + " questions) \u2014 " + gkAnswered + " answered.";
 }
 
+document.getElementById("hubCardTeacher").addEventListener("click", function(){ showView("teacher", {backTo:"hub"}); });
+document.getElementById("hubCardQuiz").addEventListener("click", function(){ renderQuizSelect(); showView("quizSelect", {backTo:"hub"}); });
+document.getElementById("hubCardSinging").addEventListener("click", function(){ renderJapanese(); showView("japanese", {backTo:"hub"}); });
+
 document.getElementById("hubCardPPL").addEventListener("click", function(){ openSubject("ppl"); });
 document.getElementById("hubCardGK").addEventListener("click", function(){ openSubject("gk"); });
-document.getElementById("hubCardJP").addEventListener("click", function(){ renderJapanese(); showView("japanese", {backTo:"hub"}); });
 
 /* ---------- subject home ---------- */
 var activeSubject = null;
@@ -1516,7 +1563,7 @@ function openSubject(key){
   document.getElementById("brandKicker").textContent = activeSubject.key === "ppl" ? "Private Pilot \u00b7 Ground School" : "General Knowledge \u00b7 Study List";
   document.getElementById("brandTitle").textContent = activeSubject.name;
   renderSubjectHome();
-  showView("subjectHome", {backTo:"hub"});
+  showView("subjectHome", {backTo:"quizSelect"});
 }
 
 function renderSubjectHome(){
@@ -2008,9 +2055,9 @@ document.getElementById("btnHint").addEventListener("click", requestHint);
 
 /* ---------- global wiring ---------- */
 document.getElementById("themeToggle").addEventListener("click", cycleTheme);
-document.getElementById("btnQuit").addEventListener("click", function(){ renderSubjectHome(); showView("subjectHome", {backTo:"hub"}); });
+document.getElementById("btnQuit").addEventListener("click", function(){ renderSubjectHome(); showView("subjectHome", {backTo:"quizSelect"}); });
 document.getElementById("btnNext").addEventListener("click", nextQuestion);
-document.getElementById("btnHome").addEventListener("click", function(){ renderSubjectHome(); showView("subjectHome", {backTo:"hub"}); });
+document.getElementById("btnHome").addEventListener("click", function(){ renderSubjectHome(); showView("subjectHome", {backTo:"quizSelect"}); });
 document.getElementById("btnRetake").addEventListener("click", function(){ startSession(session.type, session.catId); });
 
 document.addEventListener("keydown", function(e){
@@ -2166,7 +2213,9 @@ function frame(now){
 requestAnimationFrame(function(t){ last = t; frame(t); });
 
 /* ---------- coaching lines, tied into the quiz engine's existing think()/react()/celebrate() hooks ---------- */
-var HUB_LINES = ["Pick a track \u2014 I'll guide you through it.", "Ready when you are. Where should we start?"];
+var HUB_LINES = ["Teacher, Quiz, or Singing \u2014 pick a mode.", "Ready when you are. Where should we start?"];
+var QUIZSELECT_LINES = ["PPL or General Knowledge \u2014 your call.", "Pick a subject and let's drill."];
+var TEACHER_LINES = ["I don't have a narrated lesson built here yet \u2014 try Quiz or Singing for now."];
 var SUBJECT_LINES = ["Pick a category to drill, or jump into a full session.", "Pick a topic \u2014 we'll go one question at a time."];
 var THINK_LINES = ["Take your time \u2014 read every choice before you pick.", "No rush, I'm right here if you get stuck.", "Think it through \u2014 you've got this."];
 
@@ -2174,6 +2223,8 @@ window.AoiHost = {
   say: say, /* exposed so paced lesson content (e.g. the Japanese view) can drive her line directly */
   onView: function(name){
     if (name === 'hub') say(pick(HUB_LINES), { pose: 'present_r', eyes: null });
+    else if (name === 'quizSelect') say(pick(QUIZSELECT_LINES), { pose: 'point_r', eyes: null });
+    else if (name === 'teacher') say(pick(TEACHER_LINES), { pose: 'present_l', eyes: 'eyes_think' });
     else if (name === 'subjectHome') say(pick(SUBJECT_LINES), { pose: 'point_r', eyes: null });
     /* japanese: renderJapanese()'s own jpRenderBeat() drives her line directly (paced lesson beats);
        quiz and results are driven by think()/react()/celebrate() below, at their own specific moments */
