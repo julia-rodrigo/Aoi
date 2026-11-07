@@ -356,6 +356,11 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
         <h3>How's Your Day?</h3>
         <p>A casual chat with Aoi — not study-related. Save bits to a journal if you want.</p>
       </button>
+      <button class="hubcard" id="hubCardDaytrip" type="button">
+        <span class="badge" style="align-self:flex-start;">Aoi's Day</span>
+        <h3 id="daytripHubTitle">Where Aoi Went Today</h3>
+        <p id="daytripHubSub">A new place or activity every day, with real facts to learn from.</p>
+      </button>
     </div>
   </div>
 
@@ -404,6 +409,27 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
       <div class="section-title"><h2>Journal</h2></div>
       <div id="journalList"></div>
       <p class="hint" id="journalEmpty">Nothing saved yet — entries you save from the daily chat show up here.</p>
+    </div>
+  </div>
+
+  <!-- AOI'S DAY: a different real place or activity each day, narrated in small beats like the
+       Japanese lesson, plus a log of past days. Deterministic by date -- same "today" for anyone
+       who opens the app on a given date, no server or account needed. -->
+  <div id="view-daytrip" hidden>
+    <div class="jpLesson">
+      <div id="daytripChecked" class="explain"></div>
+      <button class="btn primary" id="daytripNext" type="button">Continue</button>
+    </div>
+
+    <details class="jpTranscriptWrap">
+      <summary>Transcript</summary>
+      <div id="daytripTranscript" class="jpTranscriptLog"></div>
+    </details>
+
+    <div class="jp-section">
+      <h3>Past trips</h3>
+      <div id="daytripLog"></div>
+      <p class="hint" id="daytripLogEmpty">This is Aoi's first day out — check back tomorrow for a new one.</p>
     </div>
   </div>
 
@@ -1536,13 +1562,14 @@ var views = {
   japanese: document.getElementById("view-japanese"),
   cooking: document.getElementById("view-cooking"),
   recipe: document.getElementById("view-recipe"),
-  daily: document.getElementById("view-daily")
+  daily: document.getElementById("view-daily"),
+  daytrip: document.getElementById("view-daytrip")
 };
 var backTarget = null;
 /* Views that are paced narrated lessons get the landscape corner-host "teaching mode" layout
    (see .wrap.teachMode CSS) instead of the portrait scene-player stack. Today: Japanese
-   Pronunciation. Add future narrated-lesson views here too. */
-var TEACH_VIEWS = {japanese:1};
+   Pronunciation and Aoi's Day. Add future narrated-lesson views here too. */
+var TEACH_VIEWS = {japanese:1, daytrip:1};
 var wrapEl = document.querySelector(".wrap");
 function showView(name, opts){
   Object.keys(views).forEach(function(k){ views[k].hidden = (k !== name); });
@@ -1578,6 +1605,12 @@ function renderHub(){
   document.getElementById("hubQuizSub").textContent = totalAnswered
     ? (totalAnswered + " questions answered so far across PPL Checkride Prep and General Knowledge.")
     : "PPL Checkride Prep and General Knowledge, with hints and weak-spot tracking.";
+
+  if (window.AoiTrip){
+    var dest = window.AoiTrip.today();
+    document.getElementById("daytripHubTitle").textContent = dest.place;
+    document.getElementById("daytripHubSub").textContent = dest.kind + " — today's trip. A new one tomorrow.";
+  }
 }
 
 /* ---------- quiz select (PPL / GK) ---------- */
@@ -1603,6 +1636,7 @@ document.getElementById("hubCardQuiz").addEventListener("click", function(){ ren
 document.getElementById("hubCardSinging").addEventListener("click", function(){ renderJapanese(); showView("japanese", {backTo:"hub"}); });
 document.getElementById("hubCardCooking").addEventListener("click", function(){ renderCookingSelect(); showView("cooking", {backTo:"hub"}); });
 document.getElementById("hubCardDaily").addEventListener("click", function(){ renderDaily(); showView("daily", {backTo:"hub"}); });
+document.getElementById("hubCardDaytrip").addEventListener("click", function(){ renderDaytrip(); showView("daytrip", {backTo:"hub"}); });
 
 document.getElementById("hubCardPPL").addEventListener("click", function(){ openSubject("ppl"); });
 document.getElementById("hubCardGK").addEventListener("click", function(){ openSubject("gk"); });
@@ -2241,6 +2275,207 @@ document.getElementById("dailyOpenChatBtn").addEventListener("click", function()
   if (window.AoiChat && window.AoiChat.openDaily) window.AoiChat.openDaily();
 });
 
+/* ---------- Aoi's Day: a different real place or activity each day, told in small narrated
+   beats (same pattern as the Japanese lesson), plus a log of past days the user has opened.
+   Deterministic by date -- no server, no account, same "today" for anyone on a given date. */
+var DESTINATIONS = [
+  {place:"Kyoto, Japan", kind:"City", facts:[
+    "Kyoto was the capital of Japan for over a thousand years, from 794 all the way to 1868.",
+    "It's home to over a thousand Buddhist temples and Shinto shrines, including the famous gold-covered Kinkaku-ji.",
+    "Wild Japanese macaques — sometimes called snow monkeys — live in the mountains nearby, and are known for soaking in hot springs in winter."]},
+  {place:"Antarctica", kind:"Continent", facts:[
+    "Antarctica is the coldest, driest, and windiest continent on Earth — and almost entirely covered in ice.",
+    "It has no native land mammals at all, but it's home to emperor penguins, the tallest and heaviest penguin species alive.",
+    "Nearly 70% of the world's fresh water is locked up in Antarctica's ice."]},
+  {place:"Serengeti, Tanzania", kind:"Nature reserve", facts:[
+    "The Serengeti is home to the Great Migration — over a million wildebeest and hundreds of thousands of zebra moving across the plains each year.",
+    "Its name comes from a Maasai word meaning roughly \"endless plains.\"",
+    "It shares its ecosystem with Kenya's Masai Mara just across the border, so the migrating herds cross that border too."]},
+  {place:"Great Barrier Reef, Australia", kind:"Coral reef", facts:[
+    "It's the world's largest coral reef system, stretching over 1,400 miles and made up of thousands of individual reefs.",
+    "It's one of the few living structures on Earth visible from space.",
+    "It's home to six of the world's seven sea turtle species."]},
+  {place:"Amazon Rainforest, South America", kind:"Rainforest", facts:[
+    "The Amazon is the world's largest rainforest, spreading across nine countries.",
+    "Scientists estimate it holds around 10% of all known species on Earth.",
+    "The Amazon River carries more water than the next several largest rivers in the world combined."]},
+  {place:"Sahara Desert, Africa", kind:"Desert", facts:[
+    "The Sahara is the world's largest hot desert — roughly the size of the whole United States.",
+    "Despite the postcard image, much of it is actually flat rocky plateau rather than sand dunes.",
+    "It's home to the fennec fox, the smallest fox species, whose oversized ears help it radiate away heat."]},
+  {place:"Grand Canyon, USA", kind:"Canyon", facts:[
+    "The Colorado River carved the Grand Canyon over roughly 5 to 6 million years.",
+    "It's about 277 miles long and in places nearly a mile deep.",
+    "Its rock layers expose almost 2 billion years of the Earth's geological history."]},
+  {place:"The Great Wall, China", kind:"Landmark", facts:[
+    "It isn't one single wall — it's many walls built over centuries by different dynasties, later linked together.",
+    "All its sections combined stretch for thousands of miles.",
+    "Contrary to the popular myth, it isn't actually visible to the naked eye from space."]},
+  {place:"Reykjavik, Iceland", kind:"City", facts:[
+    "It's the world's northernmost capital city.",
+    "Most of Reykjavik's heating comes from geothermal energy, straight from the ground beneath it.",
+    "Iceland has no native land mammals except the Arctic fox, which reached the island by crossing sea ice long ago."]},
+  {place:"Galápagos Islands, Ecuador", kind:"Islands", facts:[
+    "These islands are famous for inspiring Charles Darwin's theory of evolution.",
+    "They're home to giant tortoises that can live well over a hundred years.",
+    "Marine iguanas here are the only lizards in the world that forage for food in the ocean."]},
+  {place:"Venice, Italy", kind:"City", facts:[
+    "Venice is built across more than a hundred small islands in a lagoon, linked by hundreds of bridges.",
+    "There are no roads for cars — everyone gets around by boat or on foot.",
+    "The city is slowly sinking, just a little more each year."]},
+  {place:"Petra, Jordan", kind:"Ancient city", facts:[
+    "Petra was carved directly into pink sandstone cliffs by the Nabataean people, over 2,000 years ago.",
+    "It's sometimes called the \"Rose City\" for the color of its rock.",
+    "It was lost to most of the outside world for centuries, until it was rediscovered in 1812."]},
+  {place:"Machu Picchu, Peru", kind:"Ancient city", facts:[
+    "This 15th-century Inca citadel sits high in the Andes, nearly 8,000 feet above sea level.",
+    "Its stones were cut so precisely that it was built without any mortar at all.",
+    "It wasn't widely known outside Peru until 1911."]},
+  {place:"Masai Mara, Kenya", kind:"Nature reserve", facts:[
+    "It's part of the same ecosystem as the Serengeti, just across the border in Kenya.",
+    "It's one of the best places on Earth to spot the \"Big Five\": lion, leopard, elephant, buffalo, and rhino.",
+    "The Mara River crossing, during the migration, is one of the most dramatic sights in nature."]},
+  {place:"The Norwegian Fjords", kind:"Fjords", facts:[
+    "Fjords are long, narrow inlets carved by glaciers during past ice ages, with steep cliffs on either side.",
+    "Sognefjord, the longest in Norway, stretches over a hundred miles inland.",
+    "Puffins nest on the cliffs, while orcas sometimes follow herring migrations through the waters below."]},
+  {place:"Fiordland, New Zealand", kind:"National park", facts:[
+    "It's one of the wettest places on Earth — some areas get well over 200 inches of rain a year.",
+    "It's home to the kiwi, a flightless bird and New Zealand's national symbol.",
+    "A kiwi egg is enormous relative to the bird's body size — one of the largest ratios of any bird."]},
+  {place:"Borneo", kind:"Rainforest island", facts:[
+    "Borneo is one of only two places on Earth — along with Sumatra — where orangutans live wild.",
+    "It's home to the Rafflesia, the world's largest flower, which can grow over three feet across.",
+    "That giant flower smells like rotting meat, to attract the insects that pollinate it."]},
+  {place:"Madagascar", kind:"Island", facts:[
+    "Madagascar has been separated from mainland Africa for around 88 million years.",
+    "That long isolation let its wildlife evolve on its own — it's home to lemurs, found nowhere else in the wild.",
+    "A huge share of its plants and animals exist nowhere else on Earth."]},
+  {place:"Yellowstone National Park, USA", kind:"National park", facts:[
+    "Established in 1872, it was the world's first national park.",
+    "It sits on top of a volcanic hot spot, giving it more geysers than anywhere else on Earth, including Old Faithful.",
+    "It's home to free-roaming American bison, the largest land mammal in North America."]},
+  {place:"The Alps", kind:"Mountain range", facts:[
+    "The Alps are Europe's highest and longest mountain range, crossing eight countries.",
+    "Mont Blanc, their tallest peak, reaches nearly 15,800 feet.",
+    "Alpine ibex — wild goats with huge curved horns — can climb near-vertical rock faces most animals couldn't touch."]},
+  {place:"Iguazu Falls, Argentina/Brazil", kind:"Waterfalls", facts:[
+    "It's not one waterfall but a system of around 275 individual falls spread across nearly two miles.",
+    "It's wider than Niagara Falls and taller than both Niagara and Victoria Falls.",
+    "The surrounding rainforest is home to toucans and brilliant blue morpho butterflies."]},
+  {place:"Mount Fuji, Japan", kind:"Mountain", facts:[
+    "At about 12,389 feet, it's Japan's tallest mountain.",
+    "It's an active volcano, though its last eruption was in the early 1700s.",
+    "Its near-perfect cone shape has inspired Japanese art for centuries."]},
+  {place:"Great Smoky Mountains, USA", kind:"National park", facts:[
+    "It's one of the most biodiverse national parks in North America.",
+    "It's famous for synchronous fireflies — one of the few firefly species anywhere that flash in unison during mating season.",
+    "Its name comes from the natural blue-grey haze that often hangs over the mountains."]},
+  {place:"Table Mountain, South Africa", kind:"Mountain", facts:[
+    "This flat-topped mountain overlooks Cape Town, and is often capped by a cloud layer locals call the \"tablecloth.\"",
+    "It holds an astonishing number of plant species for its size — more than entire countries many times its area.",
+    "It's one of the oldest mountains on Earth, far older than the Himalayas or the Alps."]},
+  {place:"The Great Lakes, North America", kind:"Lakes", facts:[
+    "Together, the five Great Lakes hold a huge share of the world's surface fresh water.",
+    "Lake Superior, the largest, is so big it could cover an entire U.S. state.",
+    "They're home to lake sturgeon, a fish species that can live over a hundred years."]},
+  {place:"The Pantanal, Brazil", kind:"Wetland", facts:[
+    "It's the world's largest tropical wetland, far bigger than better-known wetlands like the Everglades.",
+    "It has one of the highest concentrations of wildlife anywhere in South America.",
+    "It's one of the best places on Earth to spot a wild jaguar."]},
+  {place:"Jeju Island, South Korea", kind:"Volcanic island", facts:[
+    "Jeju was formed entirely by volcanic activity, centered on Hallasan, South Korea's tallest mountain.",
+    "It's known for the haenyeo — women free-divers who have harvested seafood by hand for generations, without oxygen tanks.",
+    "Its lava tube cave systems are among the longest and best preserved in the world."]},
+  {place:"The Maldives", kind:"Islands", facts:[
+    "It's a chain of around 1,200 coral islands in the Indian Ocean.",
+    "It's the lowest-lying country on Earth, with an average elevation of only a few feet above sea level.",
+    "Manta rays and whale sharks — the largest fish species alive — gather seasonally in its waters."]}
+];
+var TRIP_LOG_KEY = "aoi_trips_v1";
+function loadTripLog(){ try{ var raw = localStorage.getItem(TRIP_LOG_KEY); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } }
+function saveTripLog(entries){ try{ localStorage.setItem(TRIP_LOG_KEY, JSON.stringify(entries)); }catch(e){} }
+function todayKey(){
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function todayDestIndex(){
+  var d = new Date();
+  var localMidnight = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  var epoch = Date.UTC(2024, 0, 1);
+  var days = Math.floor((localMidnight - epoch) / 86400000);
+  return ((days % DESTINATIONS.length) + DESTINATIONS.length) % DESTINATIONS.length;
+}
+function todayDestination(){ return DESTINATIONS[todayDestIndex()]; }
+/* exposed so the daily-chat system prompt can mention today's trip without duplicating this logic */
+window.AoiTrip = { today: todayDestination };
+
+function recordTripVisit(){
+  var entries = loadTripLog();
+  var key = todayKey();
+  if (entries.length && entries[0].date === key) return; /* already logged today */
+  entries.unshift({date: key, place: todayDestination().place});
+  if (entries.length > 60) entries = entries.slice(0, 60);
+  saveTripLog(entries);
+}
+function renderTripLog(){
+  var list = document.getElementById("daytripLog");
+  var entries = loadTripLog();
+  document.getElementById("daytripLogEmpty").hidden = entries.length > 0;
+  list.innerHTML = "";
+  entries.forEach(function(e){
+    var card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = '<p class="hint">' + e.date + '</p><p>' + esc_(e.place) + '</p>';
+    list.appendChild(card);
+  });
+}
+
+var daytripIdx = 0;
+var daytripTranscript = [];
+function daytripRenderTranscript(){
+  var zone = document.getElementById("daytripTranscript");
+  zone.innerHTML = daytripTranscript.map(function(t){
+    return "<p>" + t.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</p>";
+  }).join("");
+}
+function daytripRenderBeat(){
+  var dest = todayDestination();
+  var nextBtn = document.getElementById("daytripNext");
+  var checked = document.getElementById("daytripChecked");
+  checked.className = "explain"; checked.innerHTML = "";
+  var text;
+  if (daytripIdx === 0){
+    text = "Today I went to " + dest.place + " — a " + dest.kind.toLowerCase() + ". " + dest.facts[0];
+  } else if (daytripIdx < dest.facts.length){
+    text = dest.facts[daytripIdx];
+  } else {
+    text = "That's today's trip! Come back tomorrow and I'll have gone somewhere new.";
+  }
+  daytripTranscript.push(text);
+  daytripRenderTranscript();
+  if (window.AoiHost) window.AoiHost.say(text, {pose: (daytripIdx % 2 === 0) ? "present_r" : "point_r", eyes: null});
+  var atEnd = daytripIdx >= dest.facts.length;
+  nextBtn.hidden = atEnd;
+  nextBtn.textContent = (daytripIdx + 1 < dest.facts.length) ? "Continue" : "Continue";
+}
+document.getElementById("daytripNext").addEventListener("click", function(){
+  daytripIdx++;
+  daytripRenderBeat();
+});
+function renderDaytrip(){
+  var dest = todayDestination();
+  document.getElementById("brandKicker").textContent = "Aoi's Day";
+  document.getElementById("brandTitle").textContent = dest.place;
+  document.getElementById("daytripHubTitle").textContent = dest.place;
+  document.getElementById("daytripHubSub").textContent = dest.kind + " — today's trip. A new one tomorrow.";
+  recordTripVisit();
+  renderTripLog();
+  daytripIdx = 0;
+  daytripTranscript = [];
+  daytripRenderBeat();
+}
+
 initTheme();
 renderHub();
 showView("hub");
@@ -2520,10 +2755,15 @@ function cookingSystemPrompt(){
   return lines.join('\n');
 }
 function dailySystemPrompt(){
-  return [
+  var lines = [
     'You are Aoi, the same friendly pixel-art host, but right now you are in Daily Chat mode in the "Aoi Teacher" app — this is NOT a study session, and nothing here should be routed to quizzes or lessons. Just be a warm, casual, curious conversational companion. Ask how the user\'s day went, listen, react genuinely, ask natural follow-ups. Keep replies short and conversational, like a text from a friend, not a lecture.',
     'Never invent nav tags here, never suggest quizzing them, never claim to remember something they did not actually say earlier in this conversation.'
-  ].join('\n');
+  ];
+  if (window.AoiTrip){
+    var dest = window.AoiTrip.today();
+    lines.push('', 'Today you "went" to ' + dest.place + ' (' + dest.kind + '). You may naturally mention it if it fits the conversation (e.g. the user asks what you did today), using only these real facts about it — never invent extra ones: ' + dest.facts.join(' '));
+  }
+  return lines.join('\n');
 }
 
 /* ---------- nav tag parsing: strip [[nav:...]] tags from the displayed reply, act on the first ---------- */
