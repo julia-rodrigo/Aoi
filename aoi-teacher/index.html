@@ -18,6 +18,7 @@
   --good:#1FA971; --good-bg:#e3f3e8; --bad:#c0392b; --bad-bg:#fbe6e3; --line:#D9DFEE; --row:#F1F4FB;
   --card-radius:22px; --chrome-shadow:0 10px 30px rgba(11,22,64,.10);
   --font-display:'Sora',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  --font-pixel:'Press Start 2P',var(--font-mono);
   color-scheme:light;
 }
 :root[data-theme="dark"]{
@@ -40,18 +41,14 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .topbar{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;}
 .brand{display:flex; flex-direction:column; gap:2px;}
 .brand .kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2);}
-.brand h1{font-size:clamp(22px,4vw,30px);}
+.brand h1{font-size:13px; line-height:1.45; letter-spacing:0;}
 .topbtns{display:flex; gap:8px; flex-wrap:wrap;}
 .themebtn,.navbtn{border:1px solid var(--line); background:var(--surface); color:var(--fg); border-radius:999px; padding:7px 14px; font-family:var(--font-mono); font-size:12px; cursor:pointer; white-space:nowrap;}
 .themebtn:focus-visible, button:focus-visible, .choice:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 
-.stats-row{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
-.stat{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; min-width:0;}
-.stat .n{font-family:var(--font-mono); font-size:22px; font-variant-numeric:tabular-nums;}
-.stat .l{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em;}
-
-.actions{display:flex; gap:10px; flex-wrap:wrap;}
-.btn{font-family:var(--font-body); font-weight:600; font-size:14px; border-radius:10px; padding:12px 18px; border:1px solid var(--line); background:var(--surface); color:var(--fg); cursor:pointer;}
+.actions{display:flex; gap:8px; flex-wrap:wrap;}
+.btn{font-family:var(--font-body); font-weight:600; font-size:13.5px; border-radius:10px; padding:9px 14px; border:1px solid var(--line); background:var(--surface); color:var(--fg); cursor:pointer;}
+.btn.tiny{padding:6px 10px; font-size:12px;}
 .btn.primary{background:var(--accent); color:var(--accent-fg); border-color:transparent;}
 .btn.ghost{background:transparent;}
 .btn:disabled{opacity:.5; cursor:default;}
@@ -59,36 +56,34 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .section-title{display:flex; align-items:baseline; justify-content:space-between; gap:10px;}
 .section-title h2{font-size:15px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted);}
 
-.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px;
-  max-height:clamp(360px,48vh,460px); overflow-y:auto; overflow-x:hidden; padding-right:4px; margin-right:-4px;
-  scrollbar-gutter:stable; align-content:start;}
-.grid::-webkit-scrollbar{width:8px;}
-.grid::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
-:root[data-theme="dark"] .grid::-webkit-scrollbar-thumb{border-radius:0;}
-.card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px; text-align:left; cursor:pointer; min-width:0; font-family:inherit;}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px; align-content:start;}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; gap:6px; text-align:left; cursor:pointer; min-width:0; font-family:inherit;}
 .card:hover{border-color:var(--accent);}
 .card .swatch{width:30px; height:6px; border-radius:4px; background:var(--accent-2);}
-.card h3{font-size:16px;}
-.card .meta{font-size:12px; color:var(--muted); font-family:var(--font-mono); display:flex; justify-content:space-between;}
-.card .bar{height:6px; border-radius:4px; background:var(--surface-2); overflow:hidden;}
+.card h3{font-size:14px;}
+.card .meta{font-size:11px; color:var(--muted); font-family:var(--font-mono); display:flex; justify-content:space-between;}
+.card .bar{height:5px; border-radius:4px; background:var(--surface-2); overflow:hidden;}
 .card .bar > i{display:block; height:100%; background:var(--good); width:0%;}
 .card.locked{cursor:default; opacity:.55;}
 .card.locked:hover{border-color:var(--line);}
 .card .badge{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-2); background:var(--surface-2); border-radius:999px; padding:2px 8px; align-self:flex-start;}
 .card.locked .badge{color:var(--muted);}
 
-.hubcard{background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:22px; display:flex; flex-direction:column; gap:14px; text-align:left; cursor:pointer; font-family:inherit; color:inherit;}
+.hubcard{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:5px; text-align:left; cursor:pointer; font-family:inherit; color:inherit;}
 .hubcard:hover{border-color:var(--accent);}
-.hubcard h3{font-size:20px;}
-.hubcard p{margin:0; color:var(--muted); font-size:14px; line-height:1.5;}
-.hubgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;
-  max-height:clamp(620px,70vh,680px); overflow-y:auto; overflow-x:hidden; padding-right:4px; margin-right:-4px;
-  scrollbar-gutter:stable; align-content:start;}
-.hubgrid::-webkit-scrollbar{width:8px;}
-.hubgrid::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
-:root[data-theme="dark"] .hubgrid::-webkit-scrollbar-thumb{border-radius:0;}
+.hubcard h3{font-size:15px;}
+.hubcard p{margin:0; color:var(--muted); font-size:12.5px; line-height:1.4;}
+.hubgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:8px; align-content:start;}
 
-.quizcard{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:18px; min-width:0;}
+.pager{display:flex; align-items:center; justify-content:center; gap:12px; padding-top:6px; font-family:var(--font-mono); font-size:11px; color:var(--muted);}
+.pager button{padding:5px 11px; font-size:12px;}
+
+.subjProgress{display:flex; flex-direction:column; gap:5px;}
+.subjProgress .pline{display:flex; justify-content:space-between; align-items:baseline; font-size:11.5px; color:var(--muted); font-family:var(--font-mono);}
+.subjProgress .track{height:6px; border-radius:4px; background:var(--surface-2); overflow:hidden;}
+.subjProgress .track > i{display:block; height:100%; background:var(--accent);}
+
+.quizcard{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:12px; min-width:0;}
 .progressline{display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:12px; color:var(--muted);}
 .progressline .track{flex:1; height:6px; border-radius:4px; background:var(--surface-2); overflow:hidden;}
 .progressline .track > i{display:block; height:100%; background:var(--accent);}
@@ -117,21 +112,31 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .brow .bar>i{display:block; height:100%; background:var(--accent);}
 .brow .pct{font-family:var(--font-mono); text-align:right;}
 
-.jp-section{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px 22px; display:flex; flex-direction:column; gap:12px;}
-.jp-section h3{font-size:17px;}
-.jp-section p{margin:0; line-height:1.6; font-size:14.5px;}
-.jp-section ul{margin:0; padding-left:20px; line-height:1.7; font-size:14.5px;}
-.jp-note{background:var(--surface-2); border-left:3px solid var(--accent); border-radius:8px; padding:12px 14px; font-size:13.5px; color:var(--fg);}
-.vowelrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:10px;}
-.vowelchip{background:var(--surface-2); border-radius:10px; padding:12px; text-align:center;}
-.vowelchip .kana{font-family:var(--font-display); font-size:22px;}
-.vowelchip .ipa{font-family:var(--font-mono); font-size:12px; color:var(--accent-2);}
-.drill{display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-top:1px solid var(--line);}
+.jp-section{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; gap:8px;}
+.jp-section h3{font-size:14px;}
+.jp-section p{margin:0; line-height:1.5; font-size:13px;}
+.jp-section ul{margin:0; padding-left:18px; line-height:1.55; font-size:13px;}
+.jp-note{background:var(--surface-2); border-left:3px solid var(--accent); border-radius:8px; padding:9px 11px; font-size:12px; color:var(--fg);}
+.vowelrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(74px,1fr)); gap:6px;}
+.vowelchip{background:var(--surface-2); border-radius:10px; padding:7px; text-align:center;}
+.vowelchip .kana{font-family:var(--font-display); font-size:18px;}
+.vowelchip .ipa{font-family:var(--font-mono); font-size:10.5px; color:var(--accent-2);}
+.drill{display:flex; align-items:flex-start; gap:8px; padding:7px 0; border-top:1px solid var(--line);}
 .drill:first-of-type{border-top:none;}
-.drill input{margin-top:4px;}
-.drill label{font-size:14px; line-height:1.5; cursor:pointer;}
-.drill .sub{display:block; color:var(--muted); font-size:12.5px; margin-top:2px;}
-.takecard{background:var(--surface-2); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:8px;}
+.drill input{margin-top:3px;}
+.drill label{font-size:13px; line-height:1.4; cursor:pointer;}
+.drill .sub{display:block; color:var(--muted); font-size:11.5px; margin-top:1px;}
+.takecard{background:var(--surface-2); border-radius:10px; padding:9px 11px; display:flex; flex-direction:column; gap:6px;}
+
+/* ---------- Japanese lesson: Aoi-paced beats + immediate checks + a transcript, instead of a
+   static reference wall shown all at once ---------- */
+.jpLesson{display:flex; flex-direction:column; gap:10px;}
+.jpDisclaimer{margin:0 0 2px;}
+details.jpTranscriptWrap, details.jpRefWrap{border-top:1px solid var(--line); padding-top:8px; margin-top:4px;}
+details.jpTranscriptWrap summary, details.jpRefWrap summary{cursor:pointer; font-family:var(--font-mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-2); padding:2px 0;}
+.jpTranscriptLog{display:flex; flex-direction:column; gap:6px; padding-top:8px;}
+.jpTranscriptLog p{margin:0; font-size:12.5px; line-height:1.5; color:var(--muted);}
+.jpRefWrap > .jp-section{margin-top:8px;}
 .takecard .takehead{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
 .takecard .takename{font-size:13.5px; font-weight:600;}
 .takecard .taketime{font-family:var(--font-mono); font-size:11px; color:var(--muted);}
@@ -150,68 +155,101 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .hint{font-size:12px; color:var(--muted); margin-top:6px;}
 @media (max-width:480px){ .brow{grid-template-columns:96px 1fr 42px;} }
 
-/* ---------- scene-player chrome ---------- */
-body{ -webkit-tap-highlight-color:transparent; }
-.wrap{max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:0;}
+/* ---------- scene-player chrome ----------
+   .wrap itself scrolls (not the page — body stays overflow:hidden), and #aoiCorner (her dialogue +
+   portrait) is a sticky footer: when a view's content is short it sits right after it with no gap,
+   and once content is tall enough to scroll, it sticks to the bottom of the screen instead of
+   scrolling away — so she's always visible either way, without the dead space a flex-grow "always
+   fill the viewport" approach left behind on short views like the hub. #top is sticky too, so the
+   header/controls stay reachable while scrolling a long view like the GK roadmap. */
+html,body{height:100%;}
+body{ -webkit-tap-highlight-color:transparent; overflow:hidden; padding-block:0; }
+.wrap{max-width:560px; margin:0 auto; gap:0;
+  height:100vh; height:100svh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding-top:max(12px, env(safe-area-inset-top,0px)); padding-bottom:max(8px, env(safe-area-inset-bottom,0px));}
 
-#top{display:flex; align-items:center; gap:10px; padding:2px 0 10px; flex:none;}
-#top .brand{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
-.topbtns{display:flex; gap:8px; flex:none;}
-.navbtn,.themebtn{width:38px;height:38px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--accent);
-  display:grid;place-items:center;cursor:pointer;flex:none;font-size:15px;padding:0;}
+#top{display:flex; align-items:center; gap:8px; padding:0 0 6px; background:var(--bg);
+  position:sticky; top:0; z-index:3;}
+#top .brand{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
+.topbtns{display:flex; gap:6px; flex:none;}
+.navbtn,.themebtn{width:32px;height:32px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--accent);
+  display:grid;place-items:center;cursor:pointer;flex:none;font-size:14px;padding:0;}
 .navbtn:active,.themebtn:active{transform:scale(.94);}
 
-#dots{display:flex; gap:5px; padding:0 0 10px; flex:none;}
+#dots{display:flex; gap:4px; padding:0 0 6px;}
 #dots span{flex:1;height:4px;border-radius:3px;background:var(--line);overflow:hidden;}
 #dots span i{display:block;height:100%;width:0;background:var(--accent-2);transition:width .25s ease;}
 
-#cardZone{flex:1 1 auto; min-height:0; padding:2px 0 0;}
+#cardZone{padding:2px 0 0;}
 #card{background:var(--surface); border:1.5px solid var(--line); border-radius:var(--card-radius);
-  box-shadow:var(--chrome-shadow); padding:18px;}
-.ctag{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2);margin-bottom:10px;}
+  box-shadow:var(--chrome-shadow); padding:12px;}
+.ctag{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2);margin-bottom:8px;}
 
-#sub{flex:none; position:relative; background:var(--surface); border:1.5px solid var(--line); border-radius:16px;
-  padding:13px 14px 14px; min-height:56px; margin:16px 0 0; box-shadow:var(--chrome-shadow); cursor:pointer;}
-#who{position:absolute; top:-11px; left:14px; background:var(--accent); color:var(--accent-fg); font-size:11px; font-weight:800;
-  letter-spacing:.08em; padding:3px 10px; border-radius:20px;}
-#line{font-size:15.5px; line-height:1.42; font-weight:600; padding-top:2px;}
+#aoiCorner{position:sticky; bottom:0; z-index:3; background:var(--bg); padding-top:8px; margin-top:-2px;}
+#sub{position:relative; background:var(--surface); border:1.5px solid var(--line); border-radius:14px;
+  padding:10px 12px 11px; min-height:40px; box-shadow:var(--chrome-shadow); cursor:pointer;}
+#who{position:absolute; top:-10px; left:12px; background:var(--accent); color:var(--accent-fg); font-size:10px; font-weight:800;
+  letter-spacing:.08em; padding:2px 9px; border-radius:20px;}
+#line{font-size:14px; line-height:1.38; font-weight:600; padding-top:1px;}
 #line .caret{display:inline-block;width:2px;height:1em;background:var(--accent-2);vertical-align:-2px;margin-left:2px;animation:aoiblink .8s steps(1) infinite;}
 @keyframes aoiblink{50%{opacity:0;}}
-#hint{position:absolute; top:-9px; right:14px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:1px 8px; font-size:10px; color:var(--muted); letter-spacing:.06em;}
+#hint{position:absolute; top:-8px; right:12px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:1px 7px; font-size:9px; color:var(--muted); letter-spacing:.06em;}
 
-#host{flex:none; display:flex; justify-content:center; padding:10px 0 18px;}
-#host .frame{position:relative; width:136px; height:136px; border-radius:20px; overflow:hidden;
+#host{flex:none; display:flex; justify-content:center; padding:6px 0 2px;}
+#host .frame{position:relative; width:84px; height:84px; border-radius:16px; overflow:hidden;
   background:radial-gradient(closest-side, rgba(54,160,230,.20), rgba(54,160,230,0));}
 #aoi{display:block; image-rendering:pixelated; image-rendering:-moz-crisp-edges; image-rendering:crisp-edges;}
 
-/* ---------- dark / pixel variant: flat charcoal surfaces, notched corners, no drop shadows ----------
-   Reference: the user's "Poofy Cult" app's dark theme (soft charcoal, not pure black; flat; notched
-   corners via clip-path instead of rounded+shadow). Aoi keeps her own blue accent, same restraint
-   (small interactive elements only) rather than switching to that app's orange. */
-:root[data-theme="dark"] *{ border-radius:0!important; }
-:root[data-theme="dark"] body{ font-family:var(--font-mono); -webkit-font-smoothing:none; }
-:root[data-theme="dark"] h1{ font-family:var(--font-pixel); letter-spacing:.02em; line-height:1.5; }
-:root[data-theme="dark"] h2,:root[data-theme="dark"] h3{ font-family:var(--font-mono); letter-spacing:.02em; }
-:root[data-theme="dark"] #card,
-:root[data-theme="dark"] #sub,
-:root[data-theme="dark"] .navbtn,
-:root[data-theme="dark"] .themebtn,
-:root[data-theme="dark"] .btn,
-:root[data-theme="dark"] .choice,
-:root[data-theme="dark"] .hubcard,
-:root[data-theme="dark"] .quizcard,
-:root[data-theme="dark"] .card,
-:root[data-theme="dark"] .stat,
-:root[data-theme="dark"] .jp-section,
-:root[data-theme="dark"] #host .frame,
-:root[data-theme="dark"] .takecard,
-:root[data-theme="dark"] #chatPanel,
-:root[data-theme="dark"] #chatFab,
-:root[data-theme="dark"] #settingsPanel{
+/* #aoiCorner wraps #sub+#host as one sticky-footer unit (see .wrap/#aoiCorner above); "teaching
+   mode" below repositions this same unit into a landscape content frame's corner instead. */
+#aoiCorner{ display:flex; flex-direction:column; gap:6px; }
+
+/* ---------- teaching mode: landscape corner-host layout for narrated lesson content ----------
+   Modeled on real frames from Aoi's rendered explainer video: a landscape frame, Aoi small in a
+   content-area corner reacting (not a big centered bust), the content card filling the rest, her
+   line in a compact subtitle bubble near her rather than a full-width bar ("show, don't restate" —
+   the card illustrates the point, her line is just a caption). This is additive to, not a
+   replacement for, the portrait scene-player layout above, which still drives hub/quiz/results.
+   showView() adds .teachMode to .wrap for views that are paced narrated lessons (today: Japanese
+   Pronunciation; the same class should cover future narrated-lesson content). Simplification: the
+   corner is fixed bottom-right rather than alternating sides per beat, to keep this scoped. */
+@media (orientation:landscape) and (min-width:640px){
+  .wrap.teachMode{
+    max-width:min(960px,96vw); display:grid; grid-template-columns:1fr 220px; grid-template-rows:auto 1fr;
+    grid-template-areas:"top top" "card corner"; column-gap:16px;
+  }
+  .wrap.teachMode > #top{ grid-area:top; position:static; }
+  .wrap.teachMode > #cardZone{ grid-area:card; min-width:0; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .wrap.teachMode > #aoiCorner{
+    grid-area:corner; position:static; display:flex; flex-direction:column; justify-content:flex-end;
+    align-items:stretch; gap:6px; padding-bottom:2px; padding-top:0; margin-top:0; min-height:0;
+  }
+  .wrap.teachMode #sub{ margin:0; min-height:0; }
+  .wrap.teachMode #hint{ display:none; }
+  .wrap.teachMode #host{ padding:0; }
+  .wrap.teachMode #host .frame{ width:88px; height:88px; margin:0 auto; }
+}
+
+/* ---------- pixel treatment: flat surfaces, notched corners, no drop shadows ----------
+   Applied in BOTH themes, per the user's direct request, so light and dark read as the same
+   pixel-art app — only the color palette differs between them (defined above). Reference for
+   the technique: the user's "Poofy Cult" app (flat; notched corners via clip-path instead of
+   rounded+shadow). Aoi keeps her own blue accent in both themes, not that app's orange.
+   The pixel display font (Press Start 2P) is inherently wide/chunky, so h1 runs at a small
+   size here (see .brand h1 above) rather than a normal heading size, or "PPL Checkride Prep"
+   wraps across multiple lines and eats the compact header's space. */
+*{ border-radius:0!important; }
+body{ font-family:var(--font-mono); -webkit-font-smoothing:none; }
+h1{ font-family:var(--font-pixel); }
+h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
+#card, #sub, .navbtn, .themebtn, .btn, .choice, .hubcard, .quizcard, .card, .stat, .jp-section,
+#host .frame, .takecard, #chatPanel, #chatFab, #settingsPanel{
   border-width:2px; box-shadow:none;
   clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px));
 }
-:root[data-theme="dark"] .drill{ border-top-width:2px; }
+.drill{ border-top-width:2px; }
+.chatmsg{border:1px solid var(--line);}
+.chatForm input,.settingsField input,.settingsField select{border-radius:0!important;}
 :root[data-theme="dark"] #host .frame{ background:radial-gradient(closest-side, rgba(76,155,232,.16), rgba(76,155,232,0)); }
 
 @media (max-width:480px){ .brow{grid-template-columns:96px 1fr 42px;} }
@@ -246,8 +284,6 @@ body{ -webkit-tap-highlight-color:transparent; }
 .settingsField input,.settingsField select{border:1px solid var(--line); background:var(--bg); color:var(--fg);
   border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit; width:100%;}
 .settingsActions{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;}
-:root[data-theme="dark"] .chatmsg{border-radius:0!important; border:1px solid var(--line);}
-:root[data-theme="dark"] .chatForm input,:root[data-theme="dark"] .settingsField input,:root[data-theme="dark"] .settingsField select{border-radius:0!important;}
 </style>
 </head><body>
 
@@ -292,10 +328,9 @@ body{ -webkit-tap-highlight-color:transparent; }
 
   <!-- SUBJECT HOME (PPL or GK) -->
   <div id="view-subject-home" hidden>
-    <div class="stats-row">
-      <div class="stat"><div class="n" id="homeTotalAnswered">0</div><div class="l">Answered</div></div>
-      <div class="stat"><div class="n" id="homeAccuracy">&mdash;</div><div class="l">Accuracy</div></div>
-      <div class="stat"><div class="n" id="homeMissedCount">0</div><div class="l">Missed, saved</div></div>
+    <div class="subjProgress">
+      <div class="pline"><span id="homeProgressLabel">0 / 0 answered</span><span id="homeAccuracyInline">&mdash;</span></div>
+      <div class="track"><i id="homeProgressBar" style="width:0%"></i></div>
     </div>
 
     <div class="actions" id="subjectActions">
@@ -307,6 +342,11 @@ body{ -webkit-tap-highlight-color:transparent; }
     <div>
       <div class="section-title"><h2 id="categoryGridTitle">Study by Subject</h2></div>
       <div class="grid" id="categoryGrid"></div>
+      <div class="pager" id="categoryPager" hidden>
+        <button type="button" class="btn ghost tiny" id="catPagerPrev" aria-label="Previous page">&larr;</button>
+        <span id="catPagerLabel">1 / 1</span>
+        <button type="button" class="btn ghost tiny" id="catPagerNext" aria-label="Next page">&rarr;</button>
+      </div>
     </div>
 
     <div id="roadmapZone"></div>
@@ -324,6 +364,7 @@ body{ -webkit-tap-highlight-color:transparent; }
         <div class="qcat" id="quizCat">Category</div>
         <div class="qtext" id="quizText">Question text</div>
       </div>
+      <button class="btn ghost tiny" id="btnHint" type="button" style="align-self:flex-start;">Hint from Aoi</button>
       <div class="choices" id="quizChoices"></div>
       <div class="explain" id="quizExplain"></div>
       <div class="quizfoot">
@@ -354,60 +395,75 @@ body{ -webkit-tap-highlight-color:transparent; }
 
   <!-- JAPANESE PRONUNCIATION -->
   <div id="view-japanese" hidden>
-    <div class="jp-note">
-      This is a reference and practice guide, not a listening tool &mdash; there is no audio capability here for anyone to hear your actual singing. Use it alongside recording yourself and comparing to a native reference track, or a teacher, for real feedback on your voice.
+    <p class="hint jpDisclaimer">Reference &amp; practice guide &mdash; no mic access here, so no live listening; record elsewhere and upload a take below to compare.</p>
+
+    <div class="jpLesson">
+      <div class="choices" id="jpBeatCheck" hidden></div>
+      <div class="explain" id="jpBeatExplain"></div>
+      <button class="btn primary" id="jpBeatNext" type="button">Continue</button>
     </div>
 
-    <div class="jp-section">
-      <h3>The five pure vowels</h3>
-      <p>Japanese has exactly five vowel sounds, and each one stays pure and unchanging for its full duration &mdash; unlike English vowels, which often glide into a second sound (the English "o" in "go" actually glides toward "oo"). Keeping each Japanese vowel flat and unchanging is one of the single biggest improvements you can make for clear pronunciation in singing.</p>
-      <div class="vowelrow">
-        <div class="vowelchip"><div class="kana">a</div><div class="ipa">ah, as in "father"</div></div>
-        <div class="vowelchip"><div class="kana">i</div><div class="ipa">ee, as in "see"</div></div>
-        <div class="vowelchip"><div class="kana">u</div><div class="ipa">oo, unrounded lips, as in "food" but flatter</div></div>
-        <div class="vowelchip"><div class="kana">e</div><div class="ipa">eh, as in "bed"</div></div>
-        <div class="vowelchip"><div class="kana">o</div><div class="ipa">oh, as in "go" but held flat, no "w" glide at the end</div></div>
+    <details class="jpTranscriptWrap">
+      <summary>Transcript</summary>
+      <div id="jpTranscript" class="jpTranscriptLog"></div>
+    </details>
+
+    <details class="jpRefWrap">
+      <summary>Full reference &amp; practice</summary>
+
+      <div class="jp-section">
+        <h3>The five pure vowels</h3>
+        <p>Japanese has exactly five vowel sounds, and each one stays pure and unchanging for its full duration &mdash; unlike English vowels, which often glide into a second sound (the English "o" in "go" actually glides toward "oo"). Keeping each Japanese vowel flat and unchanging is one of the single biggest improvements you can make for clear pronunciation in singing.</p>
+        <div class="vowelrow">
+          <div class="vowelchip"><div class="kana">a</div><div class="ipa">ah, as in "father"</div></div>
+          <div class="vowelchip"><div class="kana">i</div><div class="ipa">ee, as in "see"</div></div>
+          <div class="vowelchip"><div class="kana">u</div><div class="ipa">oo, unrounded lips, as in "food" but flatter</div></div>
+          <div class="vowelchip"><div class="kana">e</div><div class="ipa">eh, as in "bed"</div></div>
+          <div class="vowelchip"><div class="kana">o</div><div class="ipa">oh, as in "go" but held flat, no "w" glide at the end</div></div>
+        </div>
       </div>
-    </div>
 
-    <div class="jp-section">
-      <h3>Mora-timing: why Japanese lyrics feel different to sing</h3>
-      <p>English is stress-timed: some syllables get stretched, others get swallowed, depending on emphasis. Japanese is mora-timed: each mora, roughly one kana character, gets close to equal rhythmic weight. A long vowel (two morae) should sound almost exactly twice as long as a short one, and a small tsu (small &#x3063;), a held silent beat, takes up a full mora of time too.</p>
-      <p>When singing, melody and mora-timing interact: a composer typically assigns one note per mora. Giving every mora its proper duration, rather than rushing through unstressed-feeling syllables the way you would in English, is what makes Japanese lyrics sound clear and idiomatic rather than hurried.</p>
-    </div>
+      <div class="jp-section">
+        <h3>Mora-timing: why Japanese lyrics feel different to sing</h3>
+        <p>English is stress-timed: some syllables get stretched, others get swallowed, depending on emphasis. Japanese is mora-timed: each mora, roughly one kana character, gets close to equal rhythmic weight. A long vowel (two morae) should sound almost exactly twice as long as a short one, and a small tsu (small &#x3063;), a held silent beat, takes up a full mora of time too.</p>
+        <p>When singing, melody and mora-timing interact: a composer typically assigns one note per mora. Giving every mora its proper duration, rather than rushing through unstressed-feeling syllables the way you would in English, is what makes Japanese lyrics sound clear and idiomatic rather than hurried.</p>
+      </div>
 
-    <div class="jp-section">
-      <h3>Common pronunciation pitfalls for English speakers</h3>
-      <ul>
-        <li><b>Devoicing habits leaking into singing.</b> In spoken Japanese, i and u are often nearly whispered between voiceless consonants (such as in &#x3067;&#x3059;, desu). In singing, these vowels are usually voiced fully to carry the melody &mdash; don't swallow them the way casual speech does.</li>
-        <li><b>Diphthongizing o and e.</b> English speakers often glide "o" toward "ow" and "e" toward "ay." Keep both flat and pure for the entire note.</li>
-        <li><b>The Japanese r.</b> It is a quick flap of the tongue tip against the ridge behind your teeth &mdash; closer to a light "d" or the American English "tt" in "butter" than to an English r or l. It should never be rolled.</li>
-        <li><b>Double consonants (small tsu, &#x3063;).</b> This marks a brief, silent held stop before the next consonant, not a doubled sound. In &#x3061;&#x3087;&#x3063;&#x3068; (chotto), there is a true beat of silence before the "to."</li>
-        <li><b>Long vowels.</b> A long vowel, written with a doubled vowel kana or a dash in katakana, must be held for a full extra mora. Cutting it short changes both rhythm and, often, the word's meaning.</li>
-        <li><b>The syllabic n (&#x3093;).</b> This is its own mora with its own beat, not just a consonant tacked onto the previous syllable &mdash; give it real duration rather than clipping it.</li>
-      </ul>
-    </div>
+      <div class="jp-section">
+        <h3>Common pronunciation pitfalls for English speakers</h3>
+        <ul>
+          <li><b>Devoicing habits leaking into singing.</b> In spoken Japanese, i and u are often nearly whispered between voiceless consonants (such as in &#x3067;&#x3059;, desu). In singing, these vowels are usually voiced fully to carry the melody &mdash; don't swallow them the way casual speech does.</li>
+          <li><b>Diphthongizing o and e.</b> English speakers often glide "o" toward "ow" and "e" toward "ay." Keep both flat and pure for the entire note.</li>
+          <li><b>The Japanese r.</b> It is a quick flap of the tongue tip against the ridge behind your teeth &mdash; closer to a light "d" or the American English "tt" in "butter" than to an English r or l. It should never be rolled.</li>
+          <li><b>Double consonants (small tsu, &#x3063;).</b> This marks a brief, silent held stop before the next consonant, not a doubled sound. In &#x3061;&#x3087;&#x3063;&#x3068; (chotto), there is a true beat of silence before the "to."</li>
+          <li><b>Long vowels.</b> A long vowel, written with a doubled vowel kana or a dash in katakana, must be held for a full extra mora. Cutting it short changes both rhythm and, often, the word's meaning.</li>
+          <li><b>The syllabic n (&#x3093;).</b> This is its own mora with its own beat, not just a consonant tacked onto the previous syllable &mdash; give it real duration rather than clipping it.</li>
+        </ul>
+      </div>
 
-    <div class="jp-section">
-      <h3>Your takes</h3>
-      <p>This app cannot access your microphone directly &mdash; Artifacts like this one are not given microphone or camera access, so there is no live "record" button here. Instead: record yourself elsewhere (your phone's voice memo app works fine), then upload that file below to play it back and compare it against the guide above, right after you sing it.</p>
-      <div class="jp-note">Uploaded takes live only in this browser tab for this session. Reloading the page clears them &mdash; this is a quick listen-back tool, not storage. Keep your real recordings in whatever app you used to make them.</div>
-      <label class="btn" for="jpTakeUpload" style="display:inline-flex; align-items:center; cursor:pointer; width:fit-content;">Upload a take</label>
-      <input type="file" id="jpTakeUpload" accept="audio/*,video/*" style="display:none;">
-      <div id="jpTakesList" style="display:flex; flex-direction:column; gap:12px;"></div>
-    </div>
+      <div class="jp-section">
+        <h3>Your takes</h3>
+        <p>This app cannot access your microphone directly &mdash; Artifacts like this one are not given microphone or camera access, so there is no live "record" button here. Instead: record yourself elsewhere (your phone's voice memo app works fine), then upload that file below to play it back and compare it against the guide above, right after you sing it.</p>
+        <div class="jp-note">Uploaded takes live only in this browser tab for this session. Reloading the page clears them &mdash; this is a quick listen-back tool, not storage. Keep your real recordings in whatever app you used to make them.</div>
+        <label class="btn" for="jpTakeUpload" style="display:inline-flex; align-items:center; cursor:pointer; width:fit-content;">Upload a take</label>
+        <input type="file" id="jpTakeUpload" accept="audio/*,video/*" style="display:none;">
+        <div id="jpTakesList" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
 
-    <div class="jp-section">
-      <h3>Practice log</h3>
-      <p>Check off what you practiced today. This is saved on this device only.</p>
-      <div id="jpDrills"></div>
-    </div>
+      <div class="jp-section">
+        <h3>Practice log</h3>
+        <p>Check off what you practiced today. This is saved on this device only.</p>
+        <div id="jpDrills"></div>
+      </div>
+    </details>
   </div>
 
   </div></div>
 
-  <div id="sub"><div id="who">AOI</div><div id="line"></div><div id="hint">tap to skip</div></div>
-  <div id="host"><div class="frame"><canvas id="aoi"></canvas></div></div>
+  <div id="aoiCorner">
+    <div id="sub"><div id="who">AOI</div><div id="line"></div><div id="hint">tap to skip</div></div>
+    <div id="host"><div class="frame"><canvas id="aoi"></canvas></div></div>
+  </div>
 
   <!-- persistent chat with Aoi, reachable from every view -->
   <button id="chatFab" type="button" aria-label="Talk to Aoi">&#128172;</button>
@@ -1298,9 +1354,21 @@ function saveAnswers(subject, ans){
 
 var answers = {};
 
+function loadMissCounts(subject){
+  try{ var raw = localStorage.getItem(subject.storageKey + "_misses_v1"); return raw ? JSON.parse(raw) : {}; }catch(e){ return {}; }
+}
+function saveMissCounts(subject, counts){
+  try{ localStorage.setItem(subject.storageKey + "_misses_v1", JSON.stringify(counts)); }catch(e){}
+}
+var missCounts = {};
+
 function recordAnswer(subject, qid, correct){
   answers[qid] = correct;
   saveAnswers(subject, answers);
+  if (!correct){
+    missCounts[qid] = (missCounts[qid] || 0) + 1;
+    saveMissCounts(subject, missCounts);
+  }
 }
 
 function statsForQuestions(list){
@@ -1315,7 +1383,10 @@ function statsForQuestions(list){
 }
 
 function missedQuestions(subject){
-  return subject.questions.filter(function(q){ return answers[q.id] === false; });
+  /* Most-frequently-missed first, not just an unordered list — a question missed twice or
+     more is clearly a specific weak spot, not a one-off slip. */
+  return subject.questions.filter(function(q){ return answers[q.id] === false; })
+    .sort(function(a, b){ return (missCounts[b.id] || 0) - (missCounts[a.id] || 0); });
 }
 
 /* ---------- theme ---------- */
@@ -1360,6 +1431,11 @@ var views = {
   japanese: document.getElementById("view-japanese")
 };
 var backTarget = null;
+/* Views that are paced narrated lessons get the landscape corner-host "teaching mode" layout
+   (see .wrap.teachMode CSS) instead of the portrait scene-player stack. Today: Japanese
+   Pronunciation. Add future narrated-lesson views here too. */
+var TEACH_VIEWS = {japanese:1};
+var wrapEl = document.querySelector(".wrap");
 function showView(name, opts){
   Object.keys(views).forEach(function(k){ views[k].hidden = (k !== name); });
   var backBtn = document.getElementById("btnBack");
@@ -1367,8 +1443,9 @@ function showView(name, opts){
   else { backBtn.hidden = false; backTarget = (opts && opts.backTo) || "hub"; }
   var dots = document.getElementById("dots");
   if (name !== "quiz"){ dots.hidden = true; dots.innerHTML = ""; }
+  wrapEl.classList.toggle("teachMode", !!TEACH_VIEWS[name]);
   if (window.AoiHost && window.AoiHost.onView) window.AoiHost.onView(name);
-  window.scrollTo(0,0);
+  document.getElementById("cardZone").scrollTop = 0; /* #cardZone scrolls now, not the page */
 }
 document.getElementById("btnBack").addEventListener("click", function(){
   if (backTarget === "subjectHome" && activeSubject){ renderSubjectHome(); showView("subjectHome"); }
@@ -1400,10 +1477,33 @@ document.getElementById("hubCardJP").addEventListener("click", function(){ rende
 
 /* ---------- subject home ---------- */
 var activeSubject = null;
+var catPage = 0;
+var ROADMAP_PER_PAGE = 20;
+var roadmapPage = 0;
+var CATS_PER_PAGE = 6;
+
+/* Generic pager: slices `items` to the current page, renders that slice via `renderPage`,
+   and wires the prev/next buttons + label. Used for both the category grid (today, 12 PPL
+   categories) and the GK roadmap list (today 18 built of 105 total) \u2014 both lists that will
+   keep growing, so this scales instead of relying on a long internal scroll. */
+function wirePager(pagerEl, labelEl, prevBtn, nextBtn, totalItems, perPage, pageRef, onChange){
+  var totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+  if (pageRef.page >= totalPages) pageRef.page = totalPages - 1;
+  if (pageRef.page < 0) pageRef.page = 0;
+  pagerEl.hidden = totalPages <= 1;
+  labelEl.textContent = (pageRef.page + 1) + " / " + totalPages;
+  prevBtn.disabled = pageRef.page === 0;
+  nextBtn.disabled = pageRef.page >= totalPages - 1;
+  prevBtn.onclick = function(){ if (pageRef.page > 0){ pageRef.page--; onChange(); } };
+  nextBtn.onclick = function(){ if (pageRef.page < totalPages - 1){ pageRef.page++; onChange(); } };
+  return pageRef.page * perPage;
+}
 
 function openSubject(key){
   activeSubject = SUBJECTS[key];
   answers = loadAnswers(activeSubject);
+  missCounts = loadMissCounts(activeSubject);
+  catPage = 0; roadmapPage = 0;
   document.getElementById("brandKicker").textContent = activeSubject.key === "ppl" ? "Private Pilot \u00b7 Ground School" : "General Knowledge \u00b7 Study List";
   document.getElementById("brandTitle").textContent = activeSubject.name;
   renderSubjectHome();
@@ -1412,31 +1512,16 @@ function openSubject(key){
 
 function renderSubjectHome(){
   var all = statsForQuestions(activeSubject.questions);
-  document.getElementById("homeTotalAnswered").textContent = all.answeredCount;
-  document.getElementById("homeAccuracy").textContent = all.answeredCount ? pct(all.correct / all.answeredCount * 100) + "%" : "\u2014";
-  document.getElementById("homeMissedCount").textContent = missedQuestions(activeSubject).length;
+  document.getElementById("homeProgressLabel").textContent = all.answeredCount + " / " + activeSubject.questions.length + " answered";
+  document.getElementById("homeProgressBar").style.width = pct(all.answeredCount / activeSubject.questions.length * 100) + "%";
+  document.getElementById("homeAccuracyInline").textContent = all.answeredCount ? pct(all.correct / all.answeredCount * 100) + "% correct" : "\u2014";
 
   document.getElementById("categoryGridTitle").textContent = activeSubject.key === "ppl" ? "Study by Subject" : "Topics Available Now";
   document.getElementById("subjectActions").hidden = false;
   var examBtn = document.getElementById("btnExam");
   examBtn.hidden = activeSubject.key !== "ppl";
 
-  var grid = document.getElementById("categoryGrid");
-  grid.innerHTML = "";
-  activeSubject.cats.forEach(function(c){
-    var list = catQuestions(activeSubject, c.id);
-    var s = statsForQuestions(list);
-    var card = document.createElement("button");
-    card.type = "button";
-    card.className = "card";
-    card.innerHTML =
-      '<span class="swatch"></span>' +
-      '<h3>' + c.name + '</h3>' +
-      '<div class="meta"><span>' + list.length + ' questions</span><span>' + s.correct + '/' + list.length + ' correct</span></div>' +
-      '<div class="bar"><i style="width:' + pct(s.correct/list.length*100) + '%"></i></div>';
-    card.addEventListener("click", function(){ startSession("category", c.id); });
-    grid.appendChild(card);
-  });
+  renderCategoryPage();
 
   var missedBtn = document.getElementById("btnMissed");
   var mc = missedQuestions(activeSubject).length;
@@ -1454,23 +1539,58 @@ function renderSubjectHome(){
     section.appendChild(title);
     var list = document.createElement("div");
     list.className = "rm-list";
-    MASTER_TOPICS.forEach(function(name, idx){
-      var num = idx + 1;
-      var row = document.createElement("div");
-      var builtCat = BUILT_TOPICS[num];
-      if (builtCat){
-        row.className = "rm-item done";
-        row.innerHTML = '<span class="rm-num">' + num + '</span><span>' + name + '</span>';
-        row.addEventListener("click", function(){ startSession("category", builtCat); });
-      } else {
-        row.className = "rm-item todo";
-        row.innerHTML = '<span class="rm-num">' + num + '</span><span>' + name + ' \u2014 not built yet</span>';
-      }
-      list.appendChild(row);
-    });
     section.appendChild(list);
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    pager.innerHTML = '<button type="button" class="btn ghost tiny" aria-label="Previous page">&larr;</button><span></span><button type="button" class="btn ghost tiny" aria-label="Next page">&rarr;</button>';
+    section.appendChild(pager);
     roadmapZone.appendChild(section);
+
+    function renderRoadmapPage(){
+      var start = wirePager(pager, pager.children[1], pager.children[0], pager.children[2],
+        MASTER_TOPICS.length, ROADMAP_PER_PAGE, {get page(){return roadmapPage;}, set page(v){roadmapPage=v; renderRoadmapPage();}}, function(){});
+      list.innerHTML = "";
+      MASTER_TOPICS.slice(start, start + ROADMAP_PER_PAGE).forEach(function(name, i){
+        var num = start + i + 1;
+        var row = document.createElement("div");
+        var builtCat = BUILT_TOPICS[num];
+        if (builtCat){
+          row.className = "rm-item done";
+          row.innerHTML = '<span class="rm-num">' + num + '</span><span>' + name + '</span>';
+          row.addEventListener("click", function(){ startSession("category", builtCat); });
+        } else {
+          row.className = "rm-item todo";
+          row.innerHTML = '<span class="rm-num">' + num + '</span><span>' + name + ' \u2014 not built yet</span>';
+        }
+        list.appendChild(row);
+      });
+    }
+    renderRoadmapPage();
   }
+}
+
+function renderCategoryPage(){
+  var pagerEl = document.getElementById("categoryPager");
+  var start = wirePager(pagerEl, document.getElementById("catPagerLabel"),
+    document.getElementById("catPagerPrev"), document.getElementById("catPagerNext"),
+    activeSubject.cats.length, CATS_PER_PAGE, {get page(){return catPage;}, set page(v){catPage=v; renderCategoryPage();}}, function(){});
+
+  var grid = document.getElementById("categoryGrid");
+  grid.innerHTML = "";
+  activeSubject.cats.slice(start, start + CATS_PER_PAGE).forEach(function(c){
+    var list = catQuestions(activeSubject, c.id);
+    var s = statsForQuestions(list);
+    var card = document.createElement("button");
+    card.type = "button";
+    card.className = "card";
+    card.innerHTML =
+      '<span class="swatch"></span>' +
+      '<h3>' + c.name + '</h3>' +
+      '<div class="meta"><span>' + list.length + ' questions</span><span>' + s.correct + '/' + list.length + ' correct</span></div>' +
+      '<div class="bar"><i style="width:' + pct(s.correct/list.length*100) + '%"></i></div>';
+    card.addEventListener("click", function(){ startSession("category", c.id); });
+    grid.appendChild(card);
+  });
 }
 
 /* ---------- quiz engine ---------- */
@@ -1480,7 +1600,7 @@ function buildQueue(type, catId){
   var list;
   if (type === "category"){ list = catQuestions(activeSubject, catId); }
   else if (type === "exam"){ list = shuffle(activeSubject.questions).slice(0, 60); }
-  else if (type === "missed"){ list = missedQuestions(activeSubject); }
+  else if (type === "missed"){ return missedQuestions(activeSubject); } /* already ordered worst-first, don't shuffle it away */
   else { list = activeSubject.questions; }
   return shuffle(list);
 }
@@ -1537,6 +1657,7 @@ function renderQuestion(){
   explain.innerHTML = "";
   document.getElementById("btnNext").disabled = true;
   document.getElementById("btnNext").textContent = (session.index + 1 < total) ? "Next" : "See Results";
+  document.getElementById("btnHint").disabled = false;
 }
 
 function selectChoice(chosenIdx, btnEl){
@@ -1544,7 +1665,8 @@ function selectChoice(chosenIdx, btnEl){
   session.answeredThis = true;
   var q = currentQuestion();
   var correct = (chosenIdx === q.a);
-  if (window.AoiHost) window.AoiHost.react(correct, q.explain);
+  var priorMisses = missCounts[q.id] || 0; /* before recordAnswer increments it */
+  if (window.AoiHost) window.AoiHost.react(correct, q.explain, !correct && priorMisses >= 1);
   if (correct) session.correct++;
   recordAnswer(activeSubject, q.id, correct);
 
@@ -1706,10 +1828,7 @@ document.getElementById("jpTakeUpload").addEventListener("change", function(e){
   e.target.value = "";
 });
 
-function renderJapanese(){
-  document.getElementById("brandKicker").textContent = "Japanese";
-  document.getElementById("brandTitle").textContent = "Pronunciation for Singing";
-  renderTakes();
+function jpRenderPracticeLog(){
   var log = loadJpLog();
   var today = new Date().toISOString().slice(0,10);
   var zone = document.getElementById("jpDrills");
@@ -1731,6 +1850,152 @@ function renderJapanese(){
     zone.appendChild(row);
   });
 }
+
+/* ---------- Japanese lesson: Aoi explains in small paced beats, with an immediate interactive
+   check after each one, instead of dumping the whole reference as static text up front. The real
+   content (vowels, mora-timing, pitfalls) is unchanged — this only repaces how it's delivered.
+   A transcript keeps every line she's said so far available to scroll back through, and the full
+   reference/practice material stays available below, just collapsed by default. */
+var JP_LESSON = [
+  {
+    text: "Japanese has exactly five vowel sounds, and each one stays pure and flat for its whole length — no gliding like English does.",
+    pose: "present_l", eyes: null,
+    check: {
+      q: "English \"o\" (as in \"go\") actually glides toward a second sound by the end. Japanese \"o\" does the same thing — true or false?",
+      choices: ["True — both glide the same way", "False — Japanese \"o\" stays flat the whole time"],
+      answer: 1,
+      explain: "English \"o\" glides toward \"oo\" at the end; Japanese \"o\" stays flat and pure for its full duration — that's one of the biggest wins for clear pronunciation."
+    }
+  },
+  {
+    text: "Japanese is mora-timed: each mora — roughly one kana — gets about equal rhythmic weight, instead of English's stretch-some/swallow-some stress timing.",
+    pose: "point_r", eyes: null,
+    check: {
+      q: "A long vowel is two morae. How long should it sound next to a short vowel?",
+      choices: ["About twice as long", "About the same length", "Shorter, for emphasis"],
+      answer: 0,
+      explain: "A long vowel (two morae) should sound almost exactly twice as long as a short one — cutting it short changes the rhythm and often the word's actual meaning."
+    }
+  },
+  {
+    text: "One pitfall English speakers hit a lot: the Japanese r. It's not rolled, and it's not an English r or l either.",
+    pose: null, eyes: "eyes_think",
+    check: {
+      q: "The Japanese r is closest to which sound?",
+      choices: ["A rolled r", "A light \"d\", like the \"tt\" in \"butter\"", "A standard English \"l\""],
+      answer: 1,
+      explain: "It's a quick flap of the tongue tip against the ridge behind your teeth — closer to a light \"d\" or the American \"tt\" in \"butter\" than to an English r or l. Never rolled."
+    }
+  },
+  {
+    text: "That's the core of it: keep vowels flat, give every mora even weight, and flap that r instead of rolling it. The full reference — plus the other pitfalls, your takes, and the practice log — is below whenever you want to drill more.",
+    pose: "present_r", eyes: null
+  }
+];
+var jpIdx = 0;
+var jpTranscript = [];
+
+function jpRenderTranscript(){
+  var zone = document.getElementById("jpTranscript");
+  zone.innerHTML = jpTranscript.map(function(t){
+    return "<p>" + t.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</p>";
+  }).join("");
+}
+
+function jpRenderBeat(){
+  var beat = JP_LESSON[jpIdx];
+  var checkZone = document.getElementById("jpBeatCheck");
+  var explainZone = document.getElementById("jpBeatExplain");
+  var nextBtn = document.getElementById("jpBeatNext");
+  checkZone.innerHTML = ""; checkZone.hidden = true;
+  explainZone.innerHTML = ""; explainZone.className = "explain";
+
+  jpTranscript.push(beat.text);
+  jpRenderTranscript();
+  if (window.AoiHost) window.AoiHost.say(beat.text, {pose: beat.pose || null, eyes: beat.eyes || null});
+
+  if (beat.check){
+    checkZone.hidden = false;
+    nextBtn.hidden = true;
+    var letters = ["A","B","C"];
+    beat.check.choices.forEach(function(choice, i){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice";
+      btn.innerHTML = '<span class="k">' + letters[i] + '</span><span>' + choice + '</span>';
+      btn.addEventListener("click", function(){ jpAnswerCheck(i, btn); });
+      checkZone.appendChild(btn);
+    });
+  } else {
+    nextBtn.hidden = false;
+    nextBtn.disabled = false;
+    nextBtn.textContent = (jpIdx + 1 < JP_LESSON.length) ? "Continue" : "Done";
+  }
+}
+
+function jpAnswerCheck(i, btnEl){
+  var beat = JP_LESSON[jpIdx];
+  var correct = (i === beat.check.answer);
+  var buttons = document.getElementById("jpBeatCheck").querySelectorAll(".choice");
+  Array.prototype.forEach.call(buttons, function(el, pos){
+    el.disabled = true;
+    if (pos === beat.check.answer) el.classList.add("correct");
+    else if (el === btnEl) el.classList.add("wrong");
+  });
+  var explainZone = document.getElementById("jpBeatExplain");
+  explainZone.className = "explain show";
+  explainZone.innerHTML = "<b>" + (correct ? "Correct." : "Not quite.") + "</b> " + beat.check.explain;
+  if (window.AoiHost) window.AoiHost.react(correct, beat.check.explain);
+  jpTranscript.push((correct ? "Correct! " : "Not quite. ") + beat.check.explain);
+  jpRenderTranscript();
+
+  var nextBtn = document.getElementById("jpBeatNext");
+  nextBtn.hidden = false;
+  nextBtn.disabled = false;
+  nextBtn.textContent = (jpIdx + 1 < JP_LESSON.length) ? "Continue" : "Done";
+}
+
+document.getElementById("jpBeatNext").addEventListener("click", function(){
+  if (jpIdx + 1 < JP_LESSON.length){ jpIdx++; jpRenderBeat(); }
+  else { document.getElementById("jpBeatNext").hidden = true; }
+});
+
+function renderJapanese(){
+  document.getElementById("brandKicker").textContent = "Japanese";
+  document.getElementById("brandTitle").textContent = "Pronunciation for Singing";
+  renderTakes();
+  jpRenderPracticeLog();
+  jpIdx = 0;
+  jpTranscript = [];
+  jpRenderBeat();
+}
+
+/* ---------- hint: reuses the existing BYOK chat/LLM system (window.AoiChat, defined in the chat
+   module below) to ask for a nudge toward the current question, never the answer itself. Does not
+   touch the persistent chat history — this is a one-off, not a saved conversation turn. ---------- */
+function requestHint(){
+  var q = currentQuestion();
+  var btn = document.getElementById("btnHint");
+  if (!window.AoiChat || !window.AoiChat.hasKey()){
+    if (window.AoiHost) window.AoiHost.say("Add your API key in Settings for hints — tap the gear icon up top.", {pose:null, eyes:"eyes_think"});
+    return;
+  }
+  btn.disabled = true;
+  if (window.AoiHost) window.AoiHost.say("Let me think of a hint…", {pose:null, eyes:"eyes_think"});
+  var letters = ["A","B","C","D"];
+  var choicesText = q.choices.map(function(c, i){ return letters[i] + ") " + c; }).join("\n");
+  var prompt = "The user is answering this quiz question right now and asked for a hint, not the answer:\n\n" +
+    "Category: " + CATNAME[q.cat] + "\nQuestion: " + q.q + "\nChoices:\n" + choicesText +
+    "\n\nGive ONE short, genuine hint (1-2 sentences) that nudges them toward reasoning it out themselves. " +
+    "Do not reveal or imply which letter is correct, and do not restate the correct answer outright.";
+  window.AoiChat.ask(prompt)
+    .then(function(reply){ if (window.AoiHost) window.AoiHost.say(reply.trim(), {pose:"point_r", eyes:null}); })
+    .catch(function(err){
+      if (window.AoiHost) window.AoiHost.say("Couldn't get a hint: " + (err && err.message ? err.message : "something went wrong") + ".", {pose:null, eyes:"eyes_think"});
+    })
+    .then(function(){ btn.disabled = false; });
+}
+document.getElementById("btnHint").addEventListener("click", requestHint);
 
 /* ---------- global wiring ---------- */
 document.getElementById("themeToggle").addEventListener("click", cycleTheme);
@@ -1781,6 +2046,7 @@ window.AoiNav = {
     if (!exists) return false;
     activeSubject = subj;
     answers = loadAnswers(subj);
+    missCounts = loadMissCounts(subj);
     startSession("category", catId);
     return true;
   }
@@ -1896,17 +2162,18 @@ var SUBJECT_LINES = ["Pick a category to drill, or jump into a full session.", "
 var THINK_LINES = ["Take your time \u2014 read every choice before you pick.", "No rush, I'm right here if you get stuck.", "Think it through \u2014 you've got this."];
 
 window.AoiHost = {
+  say: say, /* exposed so paced lesson content (e.g. the Japanese view) can drive her line directly */
   onView: function(name){
     if (name === 'hub') say(pick(HUB_LINES), { pose: 'present_r', eyes: null });
     else if (name === 'subjectHome') say(pick(SUBJECT_LINES), { pose: 'point_r', eyes: null });
-    else if (name === 'japanese') say("Here's your pronunciation reference and practice log.", { pose: 'present_l', eyes: null });
-    /* quiz and results are driven by think()/react()/celebrate() below, called at their own, more specific moments */
+    /* japanese: renderJapanese()'s own jpRenderBeat() drives her line directly (paced lesson beats);
+       quiz and results are driven by think()/react()/celebrate() below, at their own specific moments */
   },
   think: function(){
     say(pick(THINK_LINES), { pose: null, eyes: 'eyes_think' });
   },
-  react: function(correct, explain){
-    var prefix = correct ? "Correct! " : "Not quite. ";
+  react: function(correct, explain, repeatMiss){
+    var prefix = correct ? "Correct! " : (repeatMiss ? "This one's tripped you up before — not quite. " : "Not quite. ");
     say(prefix + (explain || ''), { pose: correct ? 'point_r' : null, eyes: correct ? 'eyes_happy' : 'eyes_think' });
   },
   celebrate: function(pass, scorePct){
@@ -2051,6 +2318,13 @@ function callCustom(messages){
 function sendToProvider(messages){
   return currentProvider() === 'claude' ? callClaude(messages) : callCustom(messages);
 }
+
+/* Small public surface so the quiz engine's hint button can reuse this same BYOK call path
+   without touching the persisted chat history (a hint is a one-off, not a saved conversation turn). */
+window.AoiChat = {
+  hasKey: hasKey,
+  ask: function(userContent){ return sendToProvider([{role:'user', content:userContent}]); }
+};
 
 /* ---------- UI wiring ---------- */
 var $fab = document.getElementById('chatFab');
