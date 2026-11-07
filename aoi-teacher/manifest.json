@@ -1,0 +1,14 @@
+{
+  "name": "Aoi Teacher",
+  "short_name": "Aoi",
+  "description": "Study hub hosted by Aoi: PPL checkride prep, general knowledge, and Japanese pronunciation for singing.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#071034",
+  "theme_color": "#071034",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
