@@ -6,7 +6,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/favicon.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Press+Start+2P&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&family=Press+Start+2P&display=swap">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <style>
 /* Aoi Teacher: the real Aoi scene-player chrome (header + progress dots + card + dialogue bubble + portrait),
@@ -156,16 +156,25 @@ details.jpTranscriptWrap summary, details.jpRefWrap summary{cursor:pointer; font
 @media (max-width:480px){ .brow{grid-template-columns:96px 1fr 42px;} }
 
 /* ---------- scene-player chrome ----------
-   .wrap itself scrolls (not the page — body stays overflow:hidden), and #aoiCorner (her dialogue +
-   portrait) is a sticky footer: when a view's content is short it sits right after it with no gap,
-   and once content is tall enough to scroll, it sticks to the bottom of the screen instead of
-   scrolling away — so she's always visible either way, without the dead space a flex-grow "always
-   fill the viewport" approach left behind on short views like the hub. #top is sticky too, so the
-   header/controls stay reachable while scrolling a long view like the GK roadmap. */
-html,body{height:100%;}
-body{ -webkit-tap-highlight-color:transparent; overflow:hidden; padding-block:0; }
+   The page itself scrolls (html/body, normal document flow) — .wrap is NOT locked to a fixed
+   height. An earlier version forced .wrap to height:100vh so #aoiCorner could sit as a sticky
+   footer, but that backfired on tall/desktop viewports: on a short view like the hub, the forced
+   100vh container was much taller than the actual content, and since #aoiCorner sits at its
+   natural flow position (sticky does not pull a short-content footer down to fill unused space),
+   the leftover height just rendered as a large dead gap below her, worst on wide desktop windows
+   where the narrow 560px column is paired with a tall browser window. Fixing it by NOT forcing a
+   height at all: .wrap is only ever as tall as its real content, so there's never unused space to
+   leave a gap in. #top and #aoiCorner stay position:sticky (top:0 / bottom:0), now relative to the
+   real page scroll instead of an inner scroll container — on a short view nothing scrolls and she
+   just sits right after the content; on a genuinely tall view (e.g. the GK roadmap expanded) the
+   page scrolls and she sticks to the viewport bottom once you scroll past her, so she's reachable
+   without hunting for her, in both cases, at any viewport size. html's own background is set too,
+   so a short page's unused viewport area below the content is still filled with the theme's
+   background rather than a stray white gap outside of body's own box. */
+html,body{height:auto;} /* overrides the base html,body{height:100%} above, which otherwise still forces a full-viewport-tall body even with min-height removed */
+html{background:var(--bg);}
+body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
 .wrap{max-width:560px; margin:0 auto; gap:0;
-  height:100vh; height:100svh; overflow-y:auto; -webkit-overflow-scrolling:touch;
   padding-top:max(12px, env(safe-area-inset-top,0px)); padding-bottom:max(8px, env(safe-area-inset-bottom,0px));}
 
 #top{display:flex; align-items:center; gap:8px; padding:0 0 6px; background:var(--bg);
@@ -183,13 +192,13 @@ body{ -webkit-tap-highlight-color:transparent; overflow:hidden; padding-block:0;
 #cardZone{padding:2px 0 0;}
 #card{background:var(--surface); border:1.5px solid var(--line); border-radius:var(--card-radius);
   box-shadow:var(--chrome-shadow); padding:12px;}
-.ctag{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2);margin-bottom:8px;}
+.ctag{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2);margin-bottom:8px;}
 
 #aoiCorner{position:sticky; bottom:0; z-index:3; background:var(--bg); padding-top:8px; margin-top:-2px;}
 #sub{position:relative; background:var(--surface); border:1.5px solid var(--line); border-radius:14px;
   padding:10px 12px 11px; min-height:40px; box-shadow:var(--chrome-shadow); cursor:pointer;}
-#who{position:absolute; top:-10px; left:12px; background:var(--accent); color:var(--accent-fg); font-size:10px; font-weight:800;
-  letter-spacing:.08em; padding:2px 9px; border-radius:20px;}
+#who{position:absolute; top:-10px; left:12px; background:var(--accent); color:var(--accent-fg); font-size:10px; font-weight:700;
+  letter-spacing:.08em; padding:2px 9px; border-radius:20px; -webkit-font-smoothing:antialiased;}
 #line{font-size:14px; line-height:1.38; font-weight:600; padding-top:1px;}
 #line .caret{display:inline-block;width:2px;height:1em;background:var(--accent-2);vertical-align:-2px;margin-left:2px;animation:aoiblink .8s steps(1) infinite;}
 @keyframes aoiblink{50%{opacity:0;}}
