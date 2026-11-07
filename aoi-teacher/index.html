@@ -2300,12 +2300,21 @@ POSES.forEach(function(p){
 var IMG = {};
 Object.keys(SRC).forEach(function(k){ var im = new Image(); im.src = SRC[k]; IMG[k] = im; });
 
-var cv = document.getElementById('aoi'), cx = cv.getContext('2d');
+var cv = document.getElementById('aoi'), cx = cv.getContext('2d'), cvFrame = cv.parentElement;
 var S = 1, DPR = 1;
 function sizeHost(){
   DPR = window.devicePixelRatio || 1;
-  var target = 128;
-  S = Math.max(1, Math.round(target * DPR / 256 * 2) / 2);
+  // The canvas's CSS box must match #host .frame's actual rendered size (84px normally, 88px in
+  // teachMode -- see the two "#host .frame" width rules), or the frame's overflow:hidden clips an
+  // arbitrary corner of the 256x256 sprite composite instead of showing the whole bust scaled down
+  // to fit. Read the frame's real size rather than a hardcoded number, so this can't drift out of
+  // sync again the way target=128 (vs. the frame's 84px) silently did since this file's first draft.
+  // S must land exactly at target*DPR/256 (canvas CSS size = 256*S/DPR) with no snapping or floor:
+  // the old "round to nearest 0.5, minimum 1" step assumed a near-1:1 target (~128px vs. 256px
+  // source) so the floor rarely engaged; against the real 84px frame it forced S back up to 1
+  // (a 256px canvas) every time, which is the actual bug -- not just the wrong target value.
+  var target = cvFrame.clientWidth || 84;
+  S = Math.max(0.05, target * DPR / 256);
   cv.width = 256 * S; cv.height = 256 * S;
   cv.style.width = (256 * S / DPR) + 'px'; cv.style.height = (256 * S / DPR) + 'px';
 }
