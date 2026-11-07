@@ -34,7 +34,6 @@ html,body{height:100%;}
 body{
   background:var(--bg); color:var(--fg); font-family:var(--font-body);
   padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));
-  padding-block:20px 40px; min-height:100%;
 }
 h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .wrap{max-width:920px; margin:0 auto; display:flex; flex-direction:column; gap:22px;}
@@ -189,12 +188,27 @@ body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
 #dots span{flex:1;height:4px;border-radius:3px;background:var(--line);overflow:hidden;}
 #dots span i{display:block;height:100%;width:0;background:var(--accent-2);transition:width .25s ease;}
 
-#cardZone{padding:2px 0 0;}
+/* #aoiCorner's on-screen position, once position:sticky engages (any view taller than one
+   screen -- true even at scroll-top-zero, not only "once you scroll past her" as earlier
+   assumed), is fixed relative to the viewport regardless of padding on #cardZone or #aoiCorner
+   itself -- padding on either side cancels out against the bottom-anchored math. So a tall
+   #cardZone's own unscrolled lower content sits in the same screen region #aoiCorner renders
+   into, with no amount of padding able to separate them. Bounding #cardZone's own height and
+   letting IT scroll internally (the same pattern already used for teachMode) sidesteps the
+   sticky-math entirely: #aoiCorner then always sits right after it, never covering it. On a
+   short view #cardZone is simply shorter than this cap and never scrolls, so no dead space is
+   reintroduced -- only a genuinely tall view engages the internal scrollbar. */
+#cardZone{padding:2px 0 8px; max-height:calc(100svh - 230px); overflow-y:auto; -webkit-overflow-scrolling:touch;}
+@supports not (height:100svh){ #cardZone{max-height:calc(100vh - 230px);} }
 #card{background:var(--surface); border:1.5px solid var(--line); border-radius:var(--card-radius);
   box-shadow:var(--chrome-shadow); padding:12px;}
 .ctag{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2);margin-bottom:8px;}
 
-#aoiCorner{position:sticky; bottom:0; z-index:3; background:var(--bg); padding-top:8px; margin-top:-2px;}
+#aoiCorner{position:sticky; bottom:0; z-index:3; background:var(--bg); padding-top:16px; margin-top:-2px;}
+/* #sub's own top margin reserves room for #who's badge (positioned at top:-10px, ~18px tall),
+   so #aoiCorner's padding-top above covers the gap down to #card and #sub itself never needs
+   to start flush against it -- without this the badge pokes up into whatever content sits
+   directly above #aoiCorner (e.g. the hub's card list), since -10px exceeded the old 6px gap. */
 #sub{position:relative; background:var(--surface); border:1.5px solid var(--line); border-radius:14px;
   padding:10px 12px 11px; min-height:40px; box-shadow:var(--chrome-shadow); cursor:pointer;}
 #who{position:absolute; top:-10px; left:12px; background:var(--accent); color:var(--accent-fg); font-size:10px; font-weight:700;
@@ -332,6 +346,16 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
         <h3>Japanese Pronunciation</h3>
         <p>Mora-timing, pure vowels, and common pitfalls — explained by Aoi, plus a practice log.</p>
       </button>
+      <button class="hubcard" id="hubCardCooking" type="button">
+        <span class="badge" style="align-self:flex-start;">Cooking</span>
+        <h3>Cook with Aoi</h3>
+        <p>Browse recipes, or have Aoi talk you through one step by step.</p>
+      </button>
+      <button class="hubcard" id="hubCardDaily" type="button">
+        <span class="badge" style="align-self:flex-start;">Daily Chat</span>
+        <h3>How's Your Day?</h3>
+        <p>A casual chat with Aoi — not study-related. Save bits to a journal if you want.</p>
+      </button>
     </div>
   </div>
 
@@ -340,6 +364,46 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     <div class="jp-section">
       <h3>No narrated lesson here yet</h3>
       <p>This is where Aoi's recorded, narrated lessons will live — that pipeline isn't wired up yet, so there's nothing built here right now. The Japanese Pronunciation lesson in Singing mode already works the way a Teacher lesson will: small explained beats, quick checks, and a transcript. For now, head to Quiz to drill real questions, or Singing for that lesson.</p>
+    </div>
+  </div>
+
+  <!-- COOKING: recipe library + detail, with an option to have Aoi talk it through -->
+  <div id="view-cooking" hidden>
+    <div class="grid" id="recipeGrid"></div>
+    <div class="pager" id="recipePager" hidden>
+      <button type="button" class="btn ghost tiny" id="recipePagerPrev" aria-label="Previous page">&larr;</button>
+      <span id="recipePagerLabel">1 / 1</span>
+      <button type="button" class="btn ghost tiny" id="recipePagerNext" aria-label="Next page">&rarr;</button>
+    </div>
+  </div>
+
+  <div id="view-recipe" hidden>
+    <div class="jp-section">
+      <h3 id="recipeTitle">Recipe</h3>
+      <p id="recipeBlurb" class="hint"></p>
+      <button class="btn primary" id="recipeTalkBtn" type="button">Have Aoi talk me through it</button>
+    </div>
+    <div class="jp-section">
+      <h3>Ingredients</h3>
+      <ul id="recipeIngredients"></ul>
+    </div>
+    <div class="jp-section">
+      <h3>Steps</h3>
+      <ol id="recipeSteps"></ol>
+    </div>
+  </div>
+
+  <!-- DAILY CHAT: casual, non-study chat with an optional journal -->
+  <div id="view-daily" hidden>
+    <div class="jp-section">
+      <h3>Just chatting</h3>
+      <p>This is separate from the study chat — Aoi's not trying to route you anywhere here, just talking. Open the chat below, and if a reply's worth keeping, save it to your journal.</p>
+      <button class="btn primary" id="dailyOpenChatBtn" type="button">Open chat</button>
+    </div>
+    <div>
+      <div class="section-title"><h2>Journal</h2></div>
+      <div id="journalList"></div>
+      <p class="hint" id="journalEmpty">Nothing saved yet — entries you save from the daily chat show up here.</p>
     </div>
   </div>
 
@@ -505,6 +569,7 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     <div class="panelHead">
       <span class="panelTitle">Talk to Aoi</span>
       <div class="panelHeadBtns">
+        <button type="button" id="chatSaveJournalBtn" class="navbtn" aria-label="Save to journal" hidden>&#128190;</button>
         <button type="button" id="chatSettingsBtn" class="navbtn" aria-label="Settings">&#9881;</button>
         <button type="button" id="chatCloseBtn" class="navbtn" aria-label="Close chat">&times;</button>
       </div>
@@ -564,6 +629,11 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
           <input type="text" id="customModel" placeholder="e.g. gpt-4o-mini, llama-3.3-70b&hellip;">
         </div>
         <p class="hint">This calls <code>&lt;base url&gt;/chat/completions</code> directly from your browser, OpenAI-compatible format. Whether it works depends entirely on that provider allowing direct browser (CORS) requests &mdash; OpenAI's own API does not allow this, so plain OpenAI won't work here even with a valid key. Many OpenAI-compatible gateways do allow it; if a provider you try fails immediately on every message, that's very likely the provider's own CORS policy, not a bug in this app.</p>
+      </div>
+
+      <div class="settingsField">
+        <label>Voice (Fish Audio)</label>
+        <p class="hint">Live in-app narration isn't possible here &mdash; checked directly against Fish Audio's API (<code>api.fish.audio/v1/tts</code>), and it refuses browser-origin requests outright (no CORS headers at all; a preflight check gets a bare 404). That's a limit on Fish Audio's side, not a missing feature here &mdash; it would need a server in between to relay the request, which this app doesn't have. The offline video pipeline (<code>anime-explainer/</code>) already uses Fish Audio successfully because it calls the API from a real server, not a browser.</p>
       </div>
 
       <div class="settingsActions">
@@ -1463,7 +1533,10 @@ var views = {
   subjectHome: document.getElementById("view-subject-home"),
   quiz: document.getElementById("view-quiz"),
   results: document.getElementById("view-results"),
-  japanese: document.getElementById("view-japanese")
+  japanese: document.getElementById("view-japanese"),
+  cooking: document.getElementById("view-cooking"),
+  recipe: document.getElementById("view-recipe"),
+  daily: document.getElementById("view-daily")
 };
 var backTarget = null;
 /* Views that are paced narrated lessons get the landscape corner-host "teaching mode" layout
@@ -1485,6 +1558,7 @@ function showView(name, opts){
 document.getElementById("btnBack").addEventListener("click", function(){
   if (backTarget === "subjectHome" && activeSubject){ renderSubjectHome(); showView("subjectHome", {backTo:"quizSelect"}); }
   else if (backTarget === "quizSelect"){ renderQuizSelect(); showView("quizSelect", {backTo:"hub"}); }
+  else if (backTarget === "cooking"){ renderCookingSelect(); showView("cooking", {backTo:"hub"}); }
   else { renderHub(); showView("hub"); }
 });
 
@@ -1527,6 +1601,8 @@ function renderQuizSelect(){
 document.getElementById("hubCardTeacher").addEventListener("click", function(){ showView("teacher", {backTo:"hub"}); });
 document.getElementById("hubCardQuiz").addEventListener("click", function(){ renderQuizSelect(); showView("quizSelect", {backTo:"hub"}); });
 document.getElementById("hubCardSinging").addEventListener("click", function(){ renderJapanese(); showView("japanese", {backTo:"hub"}); });
+document.getElementById("hubCardCooking").addEventListener("click", function(){ renderCookingSelect(); showView("cooking", {backTo:"hub"}); });
+document.getElementById("hubCardDaily").addEventListener("click", function(){ renderDaily(); showView("daily", {backTo:"hub"}); });
 
 document.getElementById("hubCardPPL").addEventListener("click", function(){ openSubject("ppl"); });
 document.getElementById("hubCardGK").addEventListener("click", function(){ openSubject("gk"); });
@@ -2073,6 +2149,98 @@ document.addEventListener("keydown", function(e){
   }
 });
 
+/* ---------- cooking: a small original recipe library, browsable or talked through by Aoi ---------- */
+var RECIPES = [
+  {id:"garlic-butter-pasta", title:"Garlic Butter Pasta", time:"20 min", blurb:"A fast weeknight pasta — mostly pantry staples.",
+   ingredients:["200g spaghetti","3 tbsp butter","4 cloves garlic, minced","1/4 tsp red pepper flakes","1/4 cup grated parmesan","Salt, black pepper","A handful of chopped parsley"],
+   steps:["Salt a big pot of water well and bring it to a boil. Cook the spaghetti until just shy of al dente.","While it cooks, melt the butter in a wide pan over medium-low heat. Add the garlic and pepper flakes, and stir until the garlic is fragrant but not browned, about 1-2 minutes.","Scoop out about a cup of pasta water, then drain the pasta.","Add the pasta to the pan with a splash of the pasta water. Toss over medium heat for a minute so the starchy water and butter come together into a light sauce.","Off heat, stir in the parmesan and parsley. Season with salt and pepper, and add more pasta water if it looks dry."]},
+  {id:"veggie-stir-fry", title:"Quick Veggie Stir-Fry", time:"15 min", blurb:"Whatever vegetables you have, in a simple savory sauce.",
+   ingredients:["2 tbsp neutral oil","3-4 cups mixed vegetables, sliced thin","2 cloves garlic, minced","1 tsp ginger, minced","2 tbsp soy sauce","1 tsp rice vinegar","1/2 tsp sugar","Cooked rice, to serve"],
+   steps:["Mix the soy sauce, rice vinegar, and sugar in a small bowl — this is your sauce.","Heat the oil in a wide pan or wok over high heat until it shimmers.","Add the harder/denser vegetables first (carrots, broccoli) and stir-fry for 2 minutes before adding softer ones (peppers, leafy greens).","Add the garlic and ginger, and stir constantly for 30 seconds — they burn fast at this heat.","Pour in the sauce and toss everything for another minute until the vegetables are coated and just tender-crisp. Serve over rice."]},
+  {id:"tomato-egg", title:"Tomato and Egg Stir-Fry", time:"15 min", blurb:"A classic, comforting home-style dish.",
+   ingredients:["3 eggs","3 ripe tomatoes, cut into wedges","2 tbsp neutral oil, divided","1 tsp sugar","Salt","1 scallion, sliced"],
+   steps:["Beat the eggs with a pinch of salt.","Heat 1 tbsp oil in a pan over medium-high heat. Pour in the eggs and scramble gently until just set but still soft. Remove to a plate.","Add the remaining oil to the same pan. Add the tomatoes and sugar, and cook, stirring, until the tomatoes soften and release their juices, about 3-4 minutes.","Return the eggs to the pan and toss gently to combine, breaking them into large curds. Season with salt to taste.","Top with scallion and serve over rice."]},
+  {id:"basic-pancakes", title:"Basic Pancakes", time:"20 min", blurb:"A reliable weekend breakfast, no special ingredients.",
+   ingredients:["1 1/2 cups flour","2 tbsp sugar","2 tsp baking powder","1/2 tsp salt","1 1/4 cups milk","1 egg","3 tbsp melted butter, plus more for the pan"],
+   steps:["Whisk the flour, sugar, baking powder, and salt together in a bowl.","In another bowl, whisk the milk, egg, and melted butter together.","Pour the wet ingredients into the dry and stir just until combined — small lumps are fine; overmixing makes tough pancakes.","Heat a pan or griddle over medium heat and butter it lightly. Pour about 1/4 cup batter per pancake.","Cook until bubbles form on the surface and the edges look set, then flip and cook the other side until golden."]},
+  {id:"simple-fried-rice", title:"Simple Fried Rice", time:"15 min", blurb:"The best use for day-old rice.",
+   ingredients:["3 cups cold cooked rice (ideally a day old)","2 eggs, beaten","2 tbsp neutral oil, divided","1/2 cup diced vegetables (carrot, peas, corn)","2 tbsp soy sauce","1 scallion, sliced"],
+   steps:["Heat 1 tbsp oil in a wok or wide pan over high heat. Pour in the eggs, scramble briefly, and remove to a plate.","Add the remaining oil, then the diced vegetables. Stir-fry for 1-2 minutes.","Add the rice, breaking up any clumps with your spatula. Stir-fry for 2-3 minutes until it starts to get slightly crisp in spots.","Push the rice aside, pour the soy sauce directly onto the hot pan surface so it sizzles, then toss everything together.","Return the egg to the pan, add the scallion, and toss once more to combine."]},
+  {id:"roasted-sheet-pan-veg", title:"Roasted Sheet-Pan Vegetables", time:"35 min", blurb:"Hands-off, and good with almost anything.",
+   ingredients:["4 cups chopped vegetables (potatoes, carrots, broccoli, etc.)","3 tbsp olive oil","Salt, black pepper","1 tsp dried herbs (thyme, rosemary, or Italian blend)","1 clove garlic, minced (optional)"],
+   steps:["Preheat the oven to 425°F (220°C).","Toss the vegetables with the olive oil, salt, pepper, herbs, and garlic on a sheet pan, spreading them in a single layer.","Roast for 20-30 minutes, flipping halfway, until tender and browned at the edges. Denser vegetables (potatoes, carrots) may need the full time; quicker ones (broccoli) can go in partway through."]}
+];
+var RECIPES_PER_PAGE = 6;
+var recipePage = 0;
+var activeRecipe = null;
+
+function renderCookingSelect(){
+  document.getElementById("brandKicker").textContent = "Cooking";
+  document.getElementById("brandTitle").textContent = "Cook with Aoi";
+  var grid = document.getElementById("recipeGrid");
+  var start = wirePager(document.getElementById("recipePager"), document.getElementById("recipePagerLabel"),
+    document.getElementById("recipePagerPrev"), document.getElementById("recipePagerNext"),
+    RECIPES.length, RECIPES_PER_PAGE, {get page(){return recipePage;}, set page(v){recipePage=v;}}, renderCookingSelect);
+  grid.innerHTML = "";
+  RECIPES.slice(start, start + RECIPES_PER_PAGE).forEach(function(r){
+    var btn = document.createElement("button");
+    btn.className = "card"; btn.type = "button";
+    btn.innerHTML = '<h3>' + r.title + '</h3><p class="hint">' + r.blurb + ' — ' + r.time + '</p>';
+    btn.addEventListener("click", function(){ openRecipe(r.id); });
+    grid.appendChild(btn);
+  });
+}
+function openRecipe(id){
+  var r = RECIPES.filter(function(x){ return x.id === id; })[0];
+  if (!r) return;
+  activeRecipe = r;
+  document.getElementById("brandKicker").textContent = "Cooking · " + r.time;
+  document.getElementById("brandTitle").textContent = r.title;
+  document.getElementById("recipeTitle").textContent = r.title;
+  document.getElementById("recipeBlurb").textContent = r.blurb;
+  var ing = document.getElementById("recipeIngredients"); ing.innerHTML = "";
+  r.ingredients.forEach(function(i){ var li = document.createElement("li"); li.textContent = i; ing.appendChild(li); });
+  var steps = document.getElementById("recipeSteps"); steps.innerHTML = "";
+  r.steps.forEach(function(s){ var li = document.createElement("li"); li.textContent = s; steps.appendChild(li); });
+  showView("recipe", {backTo:"cooking"});
+}
+document.getElementById("recipeTalkBtn").addEventListener("click", function(){
+  if (window.AoiChat && window.AoiChat.openCooking) window.AoiChat.openCooking(activeRecipe);
+});
+
+/* ---------- daily chat: a casual, non-study space, with an optional local journal ---------- */
+var JOURNAL_KEY = "aoi_journal_v1";
+function loadJournal(){ try{ var raw = localStorage.getItem(JOURNAL_KEY); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } }
+function saveJournal(entries){ try{ localStorage.setItem(JOURNAL_KEY, JSON.stringify(entries)); }catch(e){} }
+function addJournalEntry(text){
+  var entries = loadJournal();
+  entries.unshift({t: Date.now(), text: text});
+  if (entries.length > 100) entries = entries.slice(0, 100);
+  saveJournal(entries);
+  if (views.daily && !views.daily.hidden) renderDaily();
+}
+/* exposed so the chat module (a separate closure) can save an entry without duplicating the journal logic */
+window.AoiJournal = { add: addJournalEntry };
+function renderDaily(){
+  document.getElementById("brandKicker").textContent = "Daily Chat";
+  document.getElementById("brandTitle").textContent = "How's Your Day?";
+  var list = document.getElementById("journalList");
+  var entries = loadJournal();
+  document.getElementById("journalEmpty").hidden = entries.length > 0;
+  list.innerHTML = "";
+  entries.forEach(function(e){
+    var card = document.createElement("div");
+    card.className = "card";
+    var d = new Date(e.t);
+    card.innerHTML = '<p class="hint">' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}) + '</p><p>' + esc_(e.text) + '</p>';
+    list.appendChild(card);
+  });
+}
+function esc_(s){ var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+document.getElementById("dailyOpenChatBtn").addEventListener("click", function(){
+  if (window.AoiChat && window.AoiChat.openDaily) window.AoiChat.openDaily();
+});
+
 initTheme();
 renderHub();
 showView("hub");
@@ -2213,11 +2381,14 @@ function frame(now){
 requestAnimationFrame(function(t){ last = t; frame(t); });
 
 /* ---------- coaching lines, tied into the quiz engine's existing think()/react()/celebrate() hooks ---------- */
-var HUB_LINES = ["Teacher, Quiz, or Singing \u2014 pick a mode.", "Ready when you are. Where should we start?"];
+var HUB_LINES = ["Teacher, Quiz, Singing, Cooking, or just a chat \u2014 pick a mode.", "Ready when you are. Where should we start?"];
 var QUIZSELECT_LINES = ["PPL or General Knowledge \u2014 your call.", "Pick a subject and let's drill."];
 var TEACHER_LINES = ["I don't have a narrated lesson built here yet \u2014 try Quiz or Singing for now."];
 var SUBJECT_LINES = ["Pick a category to drill, or jump into a full session.", "Pick a topic \u2014 we'll go one question at a time."];
 var THINK_LINES = ["Take your time \u2014 read every choice before you pick.", "No rush, I'm right here if you get stuck.", "Think it through \u2014 you've got this."];
+var COOKING_LINES = ["Browse a recipe, or tap one and I'll talk you through it.", "What are we making today?"];
+var RECIPE_LINES = ["Looks good \u2014 want me to walk you through it step by step?"];
+var DAILY_LINES = ["Hey \u2014 how's your day going?", "No studying here, just chatting if you want."];
 
 window.AoiHost = {
   say: say, /* exposed so paced lesson content (e.g. the Japanese view) can drive her line directly */
@@ -2226,6 +2397,9 @@ window.AoiHost = {
     else if (name === 'quizSelect') say(pick(QUIZSELECT_LINES), { pose: 'point_r', eyes: null });
     else if (name === 'teacher') say(pick(TEACHER_LINES), { pose: 'present_l', eyes: 'eyes_think' });
     else if (name === 'subjectHome') say(pick(SUBJECT_LINES), { pose: 'point_r', eyes: null });
+    else if (name === 'cooking') say(pick(COOKING_LINES), { pose: 'present_l', eyes: 'eyes_happy' });
+    else if (name === 'recipe') say(pick(RECIPE_LINES), { pose: 'point_l', eyes: 'eyes_happy' });
+    else if (name === 'daily') say(pick(DAILY_LINES), { pose: 'present_r', eyes: 'eyes_happy' });
     /* japanese: renderJapanese()'s own jpRenderBeat() drives her line directly (paced lesson beats);
        quiz and results are driven by think()/react()/celebrate() below, at their own specific moments */
   },
@@ -2271,17 +2445,25 @@ var LS = {
   customModel:'aoi_chat_custom_model_v1',
   history:'aoi_chat_history_v1'
 };
+/* Three separate chat contexts share this same provider/call plumbing (one BYOK key works
+   everywhere), but each keeps its OWN history and system prompt, so a study conversation never
+   bleeds into a recipe chat or the daily check-in, and vice versa. 'study' keeps the original
+   history key for backward compatibility with chats saved before Cooking/Daily existed. */
+var HISTORY_KEY_FOR = { study: LS.history, cooking: 'aoi_chat_history_cooking_v1', daily: 'aoi_chat_history_daily_v1' };
+var currentContext = 'study';
+var contextRecipe = null; /* the recipe being discussed, when currentContext === 'cooking' */
+
 function get(k, d){ try{ var v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }
 function set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
 function del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 
 function loadHistory(){
-  try{ var raw = localStorage.getItem(LS.history); return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
+  try{ var raw = localStorage.getItem(HISTORY_KEY_FOR[currentContext]); return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
 }
 function saveHistory(h){
   var MAX = 24; /* simple rolling window, not a summarizer — bounds token cost without an extra API call */
   if (h.length > MAX) h = h.slice(h.length - MAX);
-  try{ localStorage.setItem(LS.history, JSON.stringify(h)); }catch(e){}
+  try{ localStorage.setItem(HISTORY_KEY_FOR[currentContext], JSON.stringify(h)); }catch(e){}
 }
 
 function currentProvider(){ return get(LS.provider, 'claude'); }
@@ -2289,8 +2471,13 @@ function hasKey(){
   return currentProvider() === 'claude' ? !!get(LS.claudeKey, '') : !!get(LS.customKey, '');
 }
 
-/* ---------- system prompt, built from the app's real structure ---------- */
+/* ---------- system prompt, context-dependent ---------- */
 function systemPrompt(){
+  if (currentContext === 'cooking') return cookingSystemPrompt();
+  if (currentContext === 'daily') return dailySystemPrompt();
+  return studySystemPrompt();
+}
+function studySystemPrompt(){
   var desc = (window.AoiNav && window.AoiNav.describe) ? window.AoiNav.describe() : '';
   return [
     'You are Aoi, a friendly, encouraging pixel-art study host inside the "Aoi Teacher" web app running on this user\'s own device. Persona: warm, upbeat, concise — like a supportive tutor-friend. Keep replies short (2-4 sentences) unless the user asks for more detail.',
@@ -2310,10 +2497,30 @@ function systemPrompt(){
     'Never claim to remember something the user did not actually say earlier in this conversation.'
   ].join('\n');
 }
+function cookingSystemPrompt(){
+  var lines = [
+    'You are Aoi, the same friendly pixel-art host, but right now you are in the Cooking mode of the "Aoi Teacher" app, helping the user cook. Persona here: warm, practical, encouraging — like a friend walking them through a recipe over a video call. Keep replies short and focused on the current step unless asked for more.',
+    'Walk through the recipe one step at a time rather than dumping the whole thing at once — give one step, check if they are ready, then give the next when they say so. Answer any cooking questions that come up (substitutions, technique, timing) as best you can.'
+  ];
+  if (contextRecipe){
+    lines.push('', 'The recipe they picked is "' + contextRecipe.title + '" (' + contextRecipe.time + '). Ingredients: ' + contextRecipe.ingredients.join('; ') + '.',
+      'Steps, in order: ' + contextRecipe.steps.map(function(s, i){ return (i+1) + ') ' + s; }).join(' '));
+  } else {
+    lines.push('', 'No specific recipe was selected — ask what they want to cook, or suggest something simple.');
+  }
+  return lines.join('\n');
+}
+function dailySystemPrompt(){
+  return [
+    'You are Aoi, the same friendly pixel-art host, but right now you are in Daily Chat mode in the "Aoi Teacher" app — this is NOT a study session, and nothing here should be routed to quizzes or lessons. Just be a warm, casual, curious conversational companion. Ask how the user\'s day went, listen, react genuinely, ask natural follow-ups. Keep replies short and conversational, like a text from a friend, not a lecture.',
+    'Never invent nav tags here, never suggest quizzing them, never claim to remember something they did not actually say earlier in this conversation.'
+  ].join('\n');
+}
 
 /* ---------- nav tag parsing: strip [[nav:...]] tags from the displayed reply, act on the first ---------- */
 var NAV_RE = /\[\[nav:([a-z]+)(?::([a-z0-9_]+))?(?::([a-z0-9_]+))?\]\]/ig;
 function applyNavTags(text){
+  if (currentContext !== 'study') return text.trim(); /* cooking/daily never route the app anywhere */
   var acted = false;
   var clean = text.replace(NAV_RE, function(m, kind, a, b){
     if (!acted && window.AoiNav){
@@ -2383,7 +2590,9 @@ function sendToProvider(messages){
    without touching the persisted chat history (a hint is a one-off, not a saved conversation turn). */
 window.AoiChat = {
   hasKey: hasKey,
-  ask: function(userContent){ return sendToProvider([{role:'user', content:userContent}]); }
+  ask: function(userContent){ return sendToProvider([{role:'user', content:userContent}]); },
+  openCooking: function(recipe){ contextRecipe = recipe || null; openChat('cooking'); },
+  openDaily: function(){ openChat('daily'); }
 };
 
 /* ---------- UI wiring ---------- */
@@ -2409,8 +2618,15 @@ function renderHistory(){
   $msgs.innerHTML = '';
   loadHistory().forEach(function(m){ addBubble(m.role === 'user' ? 'user' : 'aoi', m.content); });
 }
+var $panelTitle = document.querySelector('#chatPanel .panelTitle');
+var $saveJournalBtn = document.getElementById('chatSaveJournalBtn');
 function closeAllOverlays(){ $panel.hidden = true; $settings.hidden = true; $backdrop.hidden = true; }
-function openChat(){
+function openChat(context){
+  currentContext = context || 'study';
+  if (currentContext !== 'cooking') contextRecipe = null;
+  $panelTitle.textContent = currentContext === 'cooking' ? ('Cooking' + (contextRecipe ? ': ' + contextRecipe.title : '')) :
+    currentContext === 'daily' ? "How's Your Day?" : 'Talk to Aoi';
+  $saveJournalBtn.hidden = currentContext !== 'daily';
   renderHistory();
   $noKey.hidden = hasKey();
   $panel.hidden = false; $settings.hidden = true; $backdrop.hidden = false;
@@ -2421,7 +2637,17 @@ function openSettings(){
   $settings.hidden = false; $panel.hidden = true; $backdrop.hidden = false;
 }
 
-$fab.addEventListener('click', openChat);
+$fab.addEventListener('click', function(){ openChat('study'); });
+$saveJournalBtn.addEventListener('click', function(){
+  var h = loadHistory();
+  var lastUser = null, lastAoi = null;
+  for (var i = h.length - 1; i >= 0 && (!lastUser || !lastAoi); i--){
+    if (!lastAoi && h[i].role === 'assistant') lastAoi = h[i].content;
+    else if (!lastUser && h[i].role === 'user') lastUser = h[i].content;
+  }
+  var text = [lastUser, lastAoi].filter(Boolean).join(' — ');
+  if (text && window.AoiJournal) { window.AoiJournal.add(text); $saveJournalBtn.textContent = '✓'; setTimeout(function(){ $saveJournalBtn.innerHTML = '&#128190;'; }, 1200); }
+});
 document.getElementById('chatCloseBtn').addEventListener('click', closeAllOverlays);
 document.getElementById('settingsCloseBtn').addEventListener('click', closeAllOverlays);
 document.getElementById('chatSettingsBtn').addEventListener('click', openSettings);
