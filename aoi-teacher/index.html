@@ -6,7 +6,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/favicon.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Press+Start+2P&display=swap">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <style>
 /* Aoi Teacher: the real Aoi scene-player chrome (header + progress dots + card + dialogue bubble + portrait),
@@ -21,10 +21,11 @@
   color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --bg:#071034; --surface:#0E2A7A; --surface-2:#0A1F5C; --fg:#E6F7FD; --muted:#8CA3D6;
-  --accent:#36C9F0; --accent-fg:#071034; --accent-2:#36C9F0;
-  --good:#3fd98a; --good-bg:#0f3d2c; --bad:#ff6b6b; --bad-bg:#3d1414; --line:#1F4FC0; --row:#0A1F5C;
-  --card-radius:6px; --chrome-shadow:3px 3px 0 var(--line);
+  --bg:#1B1C20; --surface:#25272C; --surface-2:#2E3036; --fg:#F1F1F0; --muted:#9A9DA6;
+  --accent:#4C9BE8; --accent-fg:#0B1420; --accent-2:#7FB8EC;
+  --good:#7CC36B; --good-bg:#20281D; --bad:#FF7B6E; --bad-bg:#2E211E; --line:#34363D; --row:#2E3036;
+  --card-radius:0px; --chrome-shadow:none;
+  --font-pixel:'Press Start 2P',var(--font-mono);
   color-scheme:dark;
 }
 *{box-sizing:border-box;}
@@ -58,7 +59,12 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .section-title{display:flex; align-items:baseline; justify-content:space-between; gap:10px;}
 .section-title h2{font-size:15px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted);}
 
-.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px;}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px;
+  max-height:clamp(360px,48vh,460px); overflow-y:auto; overflow-x:hidden; padding-right:4px; margin-right:-4px;
+  scrollbar-gutter:stable; align-content:start;}
+.grid::-webkit-scrollbar{width:8px;}
+.grid::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+:root[data-theme="dark"] .grid::-webkit-scrollbar-thumb{border-radius:0;}
 .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px; text-align:left; cursor:pointer; min-width:0; font-family:inherit;}
 .card:hover{border-color:var(--accent);}
 .card .swatch{width:30px; height:6px; border-radius:4px; background:var(--accent-2);}
@@ -75,7 +81,12 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .hubcard:hover{border-color:var(--accent);}
 .hubcard h3{font-size:20px;}
 .hubcard p{margin:0; color:var(--muted); font-size:14px; line-height:1.5;}
-.hubgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;}
+.hubgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;
+  max-height:clamp(620px,70vh,680px); overflow-y:auto; overflow-x:hidden; padding-right:4px; margin-right:-4px;
+  scrollbar-gutter:stable; align-content:start;}
+.hubgrid::-webkit-scrollbar{width:8px;}
+.hubgrid::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+:root[data-theme="dark"] .hubgrid::-webkit-scrollbar-thumb{border-radius:0;}
 
 .quizcard{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:18px; min-width:0;}
 .progressline{display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:12px; color:var(--muted);}
@@ -173,9 +184,14 @@ body{ -webkit-tap-highlight-color:transparent; }
   background:radial-gradient(closest-side, rgba(54,160,230,.20), rgba(54,160,230,0));}
 #aoi{display:block; image-rendering:pixelated; image-rendering:-moz-crisp-edges; image-rendering:crisp-edges;}
 
-/* ---------- dark / pixel variant: blockier, offset-shadow "retro console" read ---------- */
-:root[data-theme="dark"] body{ font-family:var(--font-mono); }
-:root[data-theme="dark"] h1,:root[data-theme="dark"] h2,:root[data-theme="dark"] h3{ font-family:var(--font-mono); letter-spacing:.02em; }
+/* ---------- dark / pixel variant: flat charcoal surfaces, notched corners, no drop shadows ----------
+   Reference: the user's "Poofy Cult" app's dark theme (soft charcoal, not pure black; flat; notched
+   corners via clip-path instead of rounded+shadow). Aoi keeps her own blue accent, same restraint
+   (small interactive elements only) rather than switching to that app's orange. */
+:root[data-theme="dark"] *{ border-radius:0!important; }
+:root[data-theme="dark"] body{ font-family:var(--font-mono); -webkit-font-smoothing:none; }
+:root[data-theme="dark"] h1{ font-family:var(--font-pixel); letter-spacing:.02em; line-height:1.5; }
+:root[data-theme="dark"] h2,:root[data-theme="dark"] h3{ font-family:var(--font-mono); letter-spacing:.02em; }
 :root[data-theme="dark"] #card,
 :root[data-theme="dark"] #sub,
 :root[data-theme="dark"] .navbtn,
@@ -187,17 +203,51 @@ body{ -webkit-tap-highlight-color:transparent; }
 :root[data-theme="dark"] .card,
 :root[data-theme="dark"] .stat,
 :root[data-theme="dark"] .jp-section,
-:root[data-theme="dark"] #host .frame{
-  border-width:2px; border-radius:4px; box-shadow:3px 3px 0 var(--line);
+:root[data-theme="dark"] #host .frame,
+:root[data-theme="dark"] .takecard,
+:root[data-theme="dark"] #chatPanel,
+:root[data-theme="dark"] #chatFab,
+:root[data-theme="dark"] #settingsPanel{
+  border-width:2px; box-shadow:none;
+  clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px));
 }
-:root[data-theme="dark"] #who{ border-radius:3px; }
-:root[data-theme="dark"] #dots span,
-:root[data-theme="dark"] .card .bar,
-:root[data-theme="dark"] .brow .bar,
-:root[data-theme="dark"] .progressline .track{ border-radius:2px; }
-:root[data-theme="dark"] #host .frame{ background:radial-gradient(closest-side, rgba(54,201,240,.22), rgba(54,201,240,0)); }
+:root[data-theme="dark"] .drill{ border-top-width:2px; }
+:root[data-theme="dark"] #host .frame{ background:radial-gradient(closest-side, rgba(76,155,232,.16), rgba(76,155,232,0)); }
 
 @media (max-width:480px){ .brow{grid-template-columns:96px 1fr 42px;} }
+
+/* ---------- persistent chat + settings ---------- */
+#chatFab{position:fixed; right:18px; bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:40;
+  width:56px; height:56px; border-radius:999px; border:1.5px solid var(--line); background:var(--accent);
+  color:var(--accent-fg); font-size:22px; display:grid; place-items:center; cursor:pointer; box-shadow:var(--chrome-shadow);}
+#chatFab:active{transform:scale(.95);}
+#overlayBackdrop{position:fixed; inset:0; background:rgba(5,10,25,.45); z-index:45;}
+:root[data-theme="dark"] #overlayBackdrop{background:rgba(0,0,0,.6);}
+.overlayPanel{position:fixed; left:0; right:0; bottom:0; z-index:46; margin:0 auto; max-width:560px;
+  background:var(--surface); border:1.5px solid var(--line); border-top-left-radius:20px; border-top-right-radius:20px;
+  box-shadow:var(--chrome-shadow); display:flex; flex-direction:column; max-height:min(78vh,620px);
+  padding-bottom:env(safe-area-inset-bottom,0px);}
+.panelHead{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px 10px; flex:none; border-bottom:1px solid var(--line);}
+.panelTitle{font-family:var(--font-display); font-weight:700; font-size:16px;}
+.panelHeadBtns{display:flex; gap:6px;}
+.chatMsgs{flex:1 1 auto; min-height:0; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px;}
+.chatmsg{max-width:82%; padding:10px 13px; border-radius:14px; font-size:14px; line-height:1.45; white-space:pre-wrap;}
+.chatmsg.user{align-self:flex-end; background:var(--accent); color:var(--accent-fg); border-bottom-right-radius:4px;}
+.chatmsg.aoi{align-self:flex-start; background:var(--surface-2); color:var(--fg); border-bottom-left-radius:4px;}
+.chatmsg.err{align-self:flex-start; background:var(--bad-bg); color:var(--bad);}
+.chatNoKey{padding:10px 16px 14px; flex:none;}
+.chatNoKey p{margin:0 0 10px; font-size:13px; color:var(--muted);}
+.chatForm{display:flex; gap:8px; padding:10px 14px; flex:none; border-top:1px solid var(--line);}
+.chatForm input{flex:1; min-width:0; border:1px solid var(--line); background:var(--bg); color:var(--fg);
+  border-radius:12px; padding:11px 13px; font-size:14px; font-family:inherit;}
+.settingsBody{padding:6px 16px 18px; overflow-y:auto;}
+.settingsField{display:flex; flex-direction:column; gap:6px; margin:12px 0;}
+.settingsField label{font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
+.settingsField input,.settingsField select{border:1px solid var(--line); background:var(--bg); color:var(--fg);
+  border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit; width:100%;}
+.settingsActions{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;}
+:root[data-theme="dark"] .chatmsg{border-radius:0!important; border:1px solid var(--line);}
+:root[data-theme="dark"] .chatForm input,:root[data-theme="dark"] .settingsField input,:root[data-theme="dark"] .settingsField select{border-radius:0!important;}
 </style>
 </head><body>
 
@@ -211,6 +261,7 @@ body{ -webkit-tap-highlight-color:transparent; }
     <div class="topbtns">
       <button class="navbtn" id="btnBack" hidden type="button" aria-label="Back">&larr;</button>
       <button class="themebtn" id="themeToggle" type="button" aria-label="Toggle theme">&#9728;</button>
+      <button class="themebtn" id="settingsBtn" type="button" aria-label="Chat settings">&#9881;</button>
     </div>
   </div>
 
@@ -357,6 +408,83 @@ body{ -webkit-tap-highlight-color:transparent; }
 
   <div id="sub"><div id="who">AOI</div><div id="line"></div><div id="hint">tap to skip</div></div>
   <div id="host"><div class="frame"><canvas id="aoi"></canvas></div></div>
+
+  <!-- persistent chat with Aoi, reachable from every view -->
+  <button id="chatFab" type="button" aria-label="Talk to Aoi">&#128172;</button>
+
+  <div id="chatPanel" class="overlayPanel" hidden>
+    <div class="panelHead">
+      <span class="panelTitle">Talk to Aoi</span>
+      <div class="panelHeadBtns">
+        <button type="button" id="chatSettingsBtn" class="navbtn" aria-label="Settings">&#9881;</button>
+        <button type="button" id="chatCloseBtn" class="navbtn" aria-label="Close chat">&times;</button>
+      </div>
+    </div>
+    <div id="chatMsgs" class="chatMsgs"></div>
+    <div id="chatNoKey" class="chatNoKey" hidden>
+      <p>Add an API key to chat with Aoi &mdash; it's stored only on this device, never sent anywhere but straight to the provider you pick.</p>
+      <button type="button" class="btn primary" id="chatOpenSettingsBtn">Open Settings</button>
+    </div>
+    <form id="chatForm" class="chatForm">
+      <input type="text" id="chatInput" placeholder="Tell Aoi what you want to learn&hellip;" autocomplete="off">
+      <button type="submit" class="btn primary" id="chatSendBtn">Send</button>
+    </form>
+  </div>
+
+  <div id="settingsPanel" class="overlayPanel" hidden>
+    <div class="panelHead">
+      <span class="panelTitle">Chat Settings</span>
+      <div class="panelHeadBtns">
+        <button type="button" id="settingsCloseBtn" class="navbtn" aria-label="Close settings">&times;</button>
+      </div>
+    </div>
+    <div class="settingsBody">
+      <p class="hint">Your API key is stored only in this browser (localStorage) on this device. It is never sent anywhere except directly from your browser to the provider's own API &mdash; not to Aoi Teacher's host, not to anyone else. Clearing it below removes it completely.</p>
+
+      <div class="settingsField">
+        <label for="providerSelect">Provider</label>
+        <select id="providerSelect">
+          <option value="claude">Claude (Anthropic) &mdash; confirmed to allow direct browser requests</option>
+          <option value="custom">Custom endpoint (OpenAI-compatible) &mdash; works if your provider allows direct browser requests</option>
+        </select>
+      </div>
+
+      <div id="claudeFields">
+        <div class="settingsField">
+          <label for="claudeKey">Claude API key</label>
+          <input type="password" id="claudeKey" placeholder="sk-ant-&hellip;" autocomplete="off">
+        </div>
+        <div class="settingsField">
+          <label for="claudeModel">Model</label>
+          <input type="text" id="claudeModel" placeholder="claude-sonnet-4-5-20250929">
+          <p class="hint">Check <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">Anthropic's model docs</a> if this stops working &mdash; model names change over time.</p>
+        </div>
+      </div>
+
+      <div id="customFields" hidden>
+        <div class="settingsField">
+          <label for="customBase">Base URL</label>
+          <input type="text" id="customBase" placeholder="https://api.example.com/v1">
+        </div>
+        <div class="settingsField">
+          <label for="customKey">API key</label>
+          <input type="password" id="customKey" placeholder="API key" autocomplete="off">
+        </div>
+        <div class="settingsField">
+          <label for="customModel">Model name</label>
+          <input type="text" id="customModel" placeholder="e.g. gpt-4o-mini, llama-3.3-70b&hellip;">
+        </div>
+        <p class="hint">This calls <code>&lt;base url&gt;/chat/completions</code> directly from your browser, OpenAI-compatible format. Whether it works depends entirely on that provider allowing direct browser (CORS) requests &mdash; OpenAI's own API does not allow this, so plain OpenAI won't work here even with a valid key. Many OpenAI-compatible gateways do allow it; if a provider you try fails immediately on every message, that's very likely the provider's own CORS policy, not a bug in this app.</p>
+      </div>
+
+      <div class="settingsActions">
+        <button type="button" class="btn primary" id="settingsSaveBtn">Save</button>
+        <button type="button" class="btn ghost" id="settingsClearBtn">Clear stored key</button>
+      </div>
+      <p class="hint" id="settingsSavedMsg" hidden>Saved.</p>
+    </div>
+  </div>
+  <div id="overlayBackdrop" hidden></div>
 
 </div>
 
@@ -1612,6 +1740,8 @@ document.getElementById("btnHome").addEventListener("click", function(){ renderS
 document.getElementById("btnRetake").addEventListener("click", function(){ startSession(session.type, session.catId); });
 
 document.addEventListener("keydown", function(e){
+  var tag = document.activeElement && document.activeElement.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
   if (views.quiz.hidden) return;
   if (["1","2","3","4"].indexOf(e.key) !== -1 && !session.answeredThis){
     var pos = parseInt(e.key, 10) - 1;
@@ -1625,6 +1755,36 @@ document.addEventListener("keydown", function(e){
 initTheme();
 renderHub();
 showView("hub");
+
+/* ---------- navigation, exposed for the chat module to route into ---------- */
+window.AoiNav = {
+  describe: function(){
+    var lines = [];
+    lines.push("PPL Checkride Prep (subject key \"ppl\"), " + PPL_QUESTIONS.length + " questions, categories: " +
+      PPL_CATS.map(function(c){ return c.id + "=\"" + c.name + "\""; }).join(", ") + ". Also has a 60-question Full Exam Simulation.");
+    var builtNames = Object.keys(BUILT_TOPICS).map(function(num){
+      var catId = BUILT_TOPICS[num];
+      return catId + "=\"" + (MASTER_TOPICS[parseInt(num,10)-1] || catId) + "\"";
+    });
+    lines.push("General Knowledge (subject key \"gk\"), " + GK_QUESTIONS.length + " questions, built topics: " + builtNames.join(", ") +
+      ". " + (MASTER_TOPICS.length - builtNames.length) + " more topics on the roadmap are NOT built yet — no questions exist for those.");
+    lines.push("Japanese Pronunciation for Singing (no subject key, use [[nav:japanese]]) — a reference guide and practice log, not a quiz.");
+    return lines.join("\n");
+  },
+  hub: function(){ renderHub(); showView("hub"); },
+  subject: function(key){ if (SUBJECTS[key]) openSubject(key); },
+  japanese: function(){ renderJapanese(); showView("japanese", {backTo:"hub"}); },
+  category: function(subjectKey, catId){
+    var subj = SUBJECTS[subjectKey];
+    if (!subj) return false;
+    var exists = subj.cats.some(function(c){ return c.id === catId; });
+    if (!exists) return false;
+    activeSubject = subj;
+    answers = loadAnswers(subj);
+    startSession("category", catId);
+    return true;
+  }
+};
 
 })();
 </script>
@@ -1766,5 +1926,248 @@ if ('serviceWorker' in navigator){
   });
 }
 
+</script>
+<script>
+/* ---------- Aoi chat: bring-your-own-key, text-only, per-device memory.
+   Key is stored ONLY in this browser's localStorage and sent only directly from this browser
+   to the provider's own API endpoint — never to any other host. Routes the user into real app
+   content via [[nav:...]] tags; never fabricates content for subjects that are not actually built. ---------- */
+(function(){
+"use strict";
+
+var LS = {
+  provider:'aoi_chat_provider_v1',
+  claudeKey:'aoi_chat_claude_key_v1',
+  claudeModel:'aoi_chat_claude_model_v1',
+  customBase:'aoi_chat_custom_base_v1',
+  customKey:'aoi_chat_custom_key_v1',
+  customModel:'aoi_chat_custom_model_v1',
+  history:'aoi_chat_history_v1'
+};
+function get(k, d){ try{ var v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }
+function set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+function del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+function loadHistory(){
+  try{ var raw = localStorage.getItem(LS.history); return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
+}
+function saveHistory(h){
+  var MAX = 24; /* simple rolling window, not a summarizer — bounds token cost without an extra API call */
+  if (h.length > MAX) h = h.slice(h.length - MAX);
+  try{ localStorage.setItem(LS.history, JSON.stringify(h)); }catch(e){}
+}
+
+function currentProvider(){ return get(LS.provider, 'claude'); }
+function hasKey(){
+  return currentProvider() === 'claude' ? !!get(LS.claudeKey, '') : !!get(LS.customKey, '');
+}
+
+/* ---------- system prompt, built from the app's real structure ---------- */
+function systemPrompt(){
+  var desc = (window.AoiNav && window.AoiNav.describe) ? window.AoiNav.describe() : '';
+  return [
+    'You are Aoi, a friendly, encouraging pixel-art study host inside the "Aoi Teacher" web app running on this user\'s own device. Persona: warm, upbeat, concise — like a supportive tutor-friend. Keep replies short (2-4 sentences) unless the user asks for more detail.',
+    '',
+    'The app currently contains exactly this real, built content — nothing else exists as a quiz yet:',
+    desc,
+    '',
+    'When the user wants to study or practice something: if it matches the built content above, confirm which specific part if it is ambiguous (for example, "geography" is not a section by that name, but General Knowledge has built topics on continents & oceans, countries, and latitude/longitude — offer those instead of inventing a "geography" section). Once they choose, say so naturally in your reply AND end the reply with exactly one navigation tag on its own line, so the app can take them there:',
+    '[[nav:hub]] — go to the main hub',
+    '[[nav:subject:ppl]] or [[nav:subject:gk]] — open that subject\'s category list',
+    '[[nav:japanese]] — open the Japanese pronunciation guide',
+    '[[nav:category:ppl:<id>]] or [[nav:category:gk:<id>]] — jump straight into quizzing one specific built category, using only an id exactly as listed above',
+    'Never invent a category id that was not listed above, and never include a nav tag unless you are confident it matches something real.',
+    '',
+    'If the user asks about a subject that is NOT in the list above, say plainly it is not built into this app yet — do not invent quiz questions or claim content exists that does not. You can still chat normally about it; you just cannot quiz them on it here.',
+    '',
+    'Never claim to remember something the user did not actually say earlier in this conversation.'
+  ].join('\n');
+}
+
+/* ---------- nav tag parsing: strip [[nav:...]] tags from the displayed reply, act on the first ---------- */
+var NAV_RE = /\[\[nav:([a-z]+)(?::([a-z0-9_]+))?(?::([a-z0-9_]+))?\]\]/ig;
+function applyNavTags(text){
+  var acted = false;
+  var clean = text.replace(NAV_RE, function(m, kind, a, b){
+    if (!acted && window.AoiNav){
+      acted = true;
+      try{
+        if (kind === 'hub') window.AoiNav.hub();
+        else if (kind === 'subject' && a) window.AoiNav.subject(a);
+        else if (kind === 'japanese') window.AoiNav.japanese();
+        else if (kind === 'category' && a && b) window.AoiNav.category(a, b);
+      }catch(e){}
+    }
+    return '';
+  });
+  return clean.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+/* ---------- provider calls — direct browser-to-provider, no intermediary ---------- */
+function callClaude(messages){
+  var key = get(LS.claudeKey, '');
+  var model = get(LS.claudeModel, '') || 'claude-sonnet-4-5-20250929';
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'content-type':'application/json',
+      'x-api-key': key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({ model: model, max_tokens: 700, system: systemPrompt(), messages: messages })
+  }).then(function(r){
+    return r.text().then(function(t){
+      var data; try{ data = JSON.parse(t); }catch(e){ data = null; }
+      if (!r.ok){ throw new Error((data && data.error && data.error.message) || ('HTTP ' + r.status)); }
+      if (!data || !data.content || !data.content[0] || typeof data.content[0].text !== 'string'){
+        throw new Error('Unexpected response shape from Claude.');
+      }
+      return data.content[0].text;
+    });
+  });
+}
+function callCustom(messages){
+  var base = (get(LS.customBase, '') || '').replace(/\/+$/, '');
+  var key = get(LS.customKey, '');
+  var model = get(LS.customModel, '') || '';
+  if (!base){ return Promise.reject(new Error('No base URL set in Settings.')); }
+  var body = { model: model, messages: [{role:'system', content: systemPrompt()}].concat(messages) };
+  return fetch(base + '/chat/completions', {
+    method:'POST',
+    headers:{ 'content-type':'application/json', 'authorization':'Bearer ' + key },
+    body: JSON.stringify(body)
+  }).then(function(r){
+    return r.text().then(function(t){
+      var data; try{ data = JSON.parse(t); }catch(e){ data = null; }
+      if (!r.ok){ throw new Error((data && data.error && data.error.message) || ('HTTP ' + r.status)); }
+      if (!data || !data.choices || !data.choices[0] || !data.choices[0].message || typeof data.choices[0].message.content !== 'string'){
+        throw new Error('Unexpected response shape from that endpoint.');
+      }
+      return data.choices[0].message.content;
+    });
+  });
+}
+function sendToProvider(messages){
+  return currentProvider() === 'claude' ? callClaude(messages) : callCustom(messages);
+}
+
+/* ---------- UI wiring ---------- */
+var $fab = document.getElementById('chatFab');
+var $panel = document.getElementById('chatPanel');
+var $settings = document.getElementById('settingsPanel');
+var $backdrop = document.getElementById('overlayBackdrop');
+var $msgs = document.getElementById('chatMsgs');
+var $noKey = document.getElementById('chatNoKey');
+var $form = document.getElementById('chatForm');
+var $input = document.getElementById('chatInput');
+var $sendBtn = document.getElementById('chatSendBtn');
+
+function addBubble(role, text){
+  var div = document.createElement('div');
+  div.className = 'chatmsg ' + role;
+  div.textContent = text;
+  $msgs.appendChild(div);
+  $msgs.scrollTop = $msgs.scrollHeight;
+  return div;
+}
+function renderHistory(){
+  $msgs.innerHTML = '';
+  loadHistory().forEach(function(m){ addBubble(m.role === 'user' ? 'user' : 'aoi', m.content); });
+}
+function closeAllOverlays(){ $panel.hidden = true; $settings.hidden = true; $backdrop.hidden = true; }
+function openChat(){
+  renderHistory();
+  $noKey.hidden = hasKey();
+  $panel.hidden = false; $settings.hidden = true; $backdrop.hidden = false;
+  if (hasKey()) setTimeout(function(){ $input.focus(); }, 50);
+}
+function openSettings(){
+  loadSettingsForm();
+  $settings.hidden = false; $panel.hidden = true; $backdrop.hidden = false;
+}
+
+$fab.addEventListener('click', openChat);
+document.getElementById('chatCloseBtn').addEventListener('click', closeAllOverlays);
+document.getElementById('settingsCloseBtn').addEventListener('click', closeAllOverlays);
+document.getElementById('chatSettingsBtn').addEventListener('click', openSettings);
+document.getElementById('chatOpenSettingsBtn').addEventListener('click', openSettings);
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+$backdrop.addEventListener('click', closeAllOverlays);
+
+var sending = false;
+$form.addEventListener('submit', function(e){
+  e.preventDefault();
+  if (sending) return;
+  var text = $input.value.trim();
+  if (!text) return;
+  if (!hasKey()){ openSettings(); return; }
+  $input.value = '';
+  var h = loadHistory();
+  h.push({role:'user', content:text});
+  saveHistory(h);
+  addBubble('user', text);
+  sending = true; $sendBtn.disabled = true;
+  var thinking = addBubble('aoi', '…');
+  sendToProvider(h.map(function(m){ return {role:m.role, content:m.content}; }))
+    .then(function(reply){
+      var clean = applyNavTags(reply);
+      thinking.textContent = clean || '(no reply text)';
+      var h2 = loadHistory();
+      h2.push({role:'assistant', content: reply});
+      saveHistory(h2);
+    })
+    .catch(function(err){
+      thinking.className = 'chatmsg err';
+      thinking.textContent = "Couldn't reach " + (currentProvider() === 'claude' ? 'Claude' : 'that endpoint') + ': ' + (err && err.message ? err.message : 'something went wrong') + '. Check your key/settings and try again.';
+    })
+    .then(function(){ sending = false; $sendBtn.disabled = false; $msgs.scrollTop = $msgs.scrollHeight; });
+});
+
+/* ---------- settings form ---------- */
+var $providerSelect = document.getElementById('providerSelect');
+var $claudeFields = document.getElementById('claudeFields');
+var $customFields = document.getElementById('customFields');
+var $claudeKey = document.getElementById('claudeKey');
+var $claudeModel = document.getElementById('claudeModel');
+var $customBase = document.getElementById('customBase');
+var $customKey = document.getElementById('customKey');
+var $customModel = document.getElementById('customModel');
+var $savedMsg = document.getElementById('settingsSavedMsg');
+
+function toggleProviderFields(){
+  var p = $providerSelect.value;
+  $claudeFields.hidden = p !== 'claude';
+  $customFields.hidden = p !== 'custom';
+}
+function loadSettingsForm(){
+  $providerSelect.value = currentProvider();
+  $claudeKey.value = get(LS.claudeKey, '');
+  $claudeModel.value = get(LS.claudeModel, '');
+  $customBase.value = get(LS.customBase, '');
+  $customKey.value = get(LS.customKey, '');
+  $customModel.value = get(LS.customModel, '');
+  $savedMsg.hidden = true;
+  toggleProviderFields();
+}
+$providerSelect.addEventListener('change', toggleProviderFields);
+document.getElementById('settingsSaveBtn').addEventListener('click', function(){
+  set(LS.provider, $providerSelect.value);
+  set(LS.claudeKey, $claudeKey.value.trim());
+  set(LS.claudeModel, $claudeModel.value.trim());
+  set(LS.customBase, $customBase.value.trim());
+  set(LS.customKey, $customKey.value.trim());
+  set(LS.customModel, $customModel.value.trim());
+  $savedMsg.hidden = false;
+  $noKey.hidden = hasKey();
+});
+document.getElementById('settingsClearBtn').addEventListener('click', function(){
+  del(LS.claudeKey); del(LS.customKey);
+  $claudeKey.value = ''; $customKey.value = '';
+  $savedMsg.hidden = false;
+  $noKey.hidden = hasKey();
+});
+
+})();
 </script>
 </body></html>
