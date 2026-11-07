@@ -1,0 +1,111 @@
+1
+00:00:00,395 --> 00:00:02,015
+Hi! I'm Aoi.
+
+2
+00:00:02,055 --> 00:00:03,370
+And this whole video came out
+
+3
+00:00:03,410 --> 00:00:05,395
+of one folder on Nick's computer.
+
+4
+00:00:05,435 --> 00:00:08,100
+My voice, my face, every screen you see.
+
+5
+00:00:08,140 --> 00:00:08,920
+All of it.
+
+6
+00:00:08,960 --> 00:00:10,330
+Want to see how it works?
+
+7
+00:00:10,370 --> 00:00:12,115
+Let's open the folder.
+
+8
+00:00:12,155 --> 00:00:15,105
+Up top, there's a file called CLAUDE.md.
+
+9
+00:00:15,145 --> 00:00:16,225
+That's the map.
+
+10
+00:00:16,265 --> 00:00:18,455
+It tells any AI what lives where.
+
+11
+00:00:18,495 --> 00:00:20,240
+Then there's the CONTEXT.md file.
+
+12
+00:00:20,280 --> 00:00:22,555
+It's the whole pipeline in one table.
+
+13
+00:00:22,595 --> 00:00:23,400
+Five stages,
+
+14
+00:00:23,440 --> 00:00:25,660
+one command for each, the file it makes,
+
+15
+00:00:25,700 --> 00:00:27,450
+and who checks it.
+
+16
+00:00:27,490 --> 00:00:28,800
+First, the voice.
+
+17
+00:00:28,840 --> 00:00:30,645
+Then every word gets timed.
+
+18
+00:00:30,685 --> 00:00:33,300
+Then a storyboard gets timed to those words.
+
+19
+00:00:33,340 --> 00:00:34,790
+Then comes the animation.
+
+20
+00:00:34,830 --> 00:00:36,455
+And last, the render.
+
+21
+00:00:36,495 --> 00:00:37,840
+And between every stage,
+
+22
+00:00:37,880 --> 00:00:40,795
+Nick checks the file before the next one runs.
+
+23
+00:00:40,835 --> 00:00:41,970
+That's the whole trick.
+
+24
+00:00:42,550 --> 00:00:44,655
+Take anything you do over and over.
+
+25
+00:00:44,695 --> 00:00:46,135
+Make each step a folder,
+
+26
+00:00:46,175 --> 00:00:47,930
+give each folder a short file,
+
+27
+00:00:47,970 --> 00:00:49,980
+and let the AI walk through them.
+
+28
+00:00:50,020 --> 00:00:51,370
+See you in the next one!

@@ -1,0 +1,8 @@
+# One beat for every time the picture changes. Lines that start with # are notes.
+#
+# == <type> key=value key="two words"
+# @ the words where this beat starts
+# content lines, or "- item @ words where the item appears"
+
+== host mood=happy
+@ one paragraph is one voice take

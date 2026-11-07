@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# One command per stage. Run from anywhere: ./studio <command> <video> [options]
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+PY="${PYTHON:-$([ -x "$ROOT/.venv/bin/python" ] && echo "$ROOT/.venv/bin/python" || echo python3)}"
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  setup)      exec bash "$ROOT/setup.sh" ;;
+  new)        exec "$PY" "$ROOT/tools/new.py" "$@" ;;
+  speak)      exec "$PY" "$ROOT/tools/speak.py" "$@" ;;
+  transcribe) exec "$PY" "$ROOT/tools/transcribe.py" "$@" ;;
+  cues)       exec "$PY" "$ROOT/tools/cues.py" "$@" ;;
+  stills)     exec node "$ROOT/tools/stills.mjs" "$@" ;;
+  strip)      exec node "$ROOT/tools/strip.mjs" "$@" ;;
+  preview)    exec node "$ROOT/tools/serve.mjs" "$@" ;;
+  watch)      exec node "$ROOT/tools/serve.mjs" "$@" --page watch ;;
+  styles)     exec node "$ROOT/tools/styles.mjs" "$@" ;;
+  gallery)    exec node "$ROOT/tools/serve.mjs" "$@" --page gallery ;;
+  render)     exec node "$ROOT/tools/render.mjs" "$@" ;;
+  notes)      exec "$PY" "$ROOT/tools/notes.py" "$@" ;;
+  *) sed -n '1,40p' "$ROOT/CONTEXT.md" ;;
+esac

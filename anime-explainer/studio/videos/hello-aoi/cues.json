@@ -1,0 +1,224 @@
+[
+ {
+  "type": "host",
+  "opts": {
+   "mood": "happy"
+  },
+  "anchor": "hi i'm aoi",
+  "body": [],
+  "items": [],
+  "start": 0.0,
+  "end": 2.0,
+  "line": 1
+ },
+ {
+  "type": "big",
+  "opts": {},
+  "anchor": "and this whole video came out of one folder",
+  "body": [
+   "This whole video came out of *one folder* on Nick's computer."
+  ],
+  "items": [],
+  "start": 2.0,
+  "end": 5.4,
+  "line": 2
+ },
+ {
+  "type": "list",
+  "opts": {
+   "title": "All of it"
+  },
+  "anchor": "my voice my face",
+  "body": [],
+  "items": [
+   {
+    "text": "My voice",
+    "anchor": "my voice",
+    "t": 5.4
+   },
+   {
+    "text": "My face",
+    "anchor": "my face",
+    "t": 6.04
+   },
+   {
+    "text": "Every screen you see",
+    "anchor": "every screen",
+    "t": 6.92
+   }
+  ],
+  "start": 5.4,
+  "end": 9.18,
+  "line": 3
+ },
+ {
+  "type": "host",
+  "opts": {
+   "mood": "wink"
+  },
+  "anchor": "see how it works",
+  "body": [],
+  "items": [],
+  "start": 9.18,
+  "end": 12.1,
+  "line": 4
+ },
+ {
+  "type": "screen",
+  "opts": {
+   "file": "CLAUDE.md",
+   "focus": "1",
+   "title": "anime-studio / CLAUDE.md"
+  },
+  "anchor": "up top there's a file",
+  "body": [],
+  "items": [
+   {
+    "text": "7-17",
+    "anchor": "it tells any ai",
+    "t": 16.2
+   }
+  ],
+  "start": 12.1,
+  "end": 18.4,
+  "line": 5
+ },
+ {
+  "type": "screen",
+  "opts": {
+   "file": "CONTEXT.md",
+   "focus": "7-13",
+   "title": "anime-studio / CONTEXT.md"
+  },
+  "anchor": "then there's the context file",
+  "body": [],
+  "items": [
+   {
+    "text": "9",
+    "anchor": "five stages",
+    "t": 22.52
+   }
+  ],
+  "start": 18.4,
+  "end": 27.38,
+  "line": 6
+ },
+ {
+  "type": "title",
+  "opts": {
+   "label": "Five stages"
+  },
+  "anchor": "first the voice",
+  "body": [
+   "The voice comes first"
+  ],
+  "items": [],
+  "start": 27.38,
+  "end": 28.74,
+  "line": 7
+ },
+ {
+  "type": "flow",
+  "opts": {
+   "title": "Then everything is timed to it"
+  },
+  "anchor": "then every word gets timed",
+  "body": [],
+  "items": [
+   {
+    "text": "Voice",
+    "anchor": "then every word",
+    "t": 28.74
+   },
+   {
+    "text": "Words",
+    "anchor": "gets timed",
+    "t": 29.64
+   },
+   {
+    "text": "Storyboard",
+    "anchor": "then a storyboard",
+    "t": 30.58
+   },
+   {
+    "text": "Animation",
+    "anchor": "then comes the animation",
+    "t": 33.24
+   },
+   {
+    "text": "Render",
+    "anchor": "and last the render",
+    "t": 34.7
+   }
+  ],
+  "start": 28.74,
+  "end": 36.36,
+  "line": 8
+ },
+ {
+  "type": "host",
+  "opts": {
+   "mood": "determined"
+  },
+  "anchor": "and between every stage nick checks",
+  "body": [
+   "A person checks *every file* before the next stage runs."
+  ],
+  "items": [],
+  "start": 36.36,
+  "end": 40.7,
+  "line": 9
+ },
+ {
+  "type": "host",
+  "opts": {
+   "mood": "happy"
+  },
+  "anchor": "that's the whole trick",
+  "body": [],
+  "items": [],
+  "start": 40.7,
+  "end": 42.42,
+  "line": 10
+ },
+ {
+  "type": "list",
+  "opts": {
+   "title": "Build your own"
+  },
+  "anchor": "take anything you do",
+  "body": [],
+  "items": [
+   {
+    "text": "One folder for each step",
+    "anchor": "make each step a folder",
+    "t": 44.56
+   },
+   {
+    "text": "A short file in each folder",
+    "anchor": "give each folder",
+    "t": 46.02
+   },
+   {
+    "text": "The AI walks through them",
+    "anchor": "and let the ai",
+    "t": 47.82
+   }
+  ],
+  "start": 42.42,
+  "end": 49.94,
+  "line": 11
+ },
+ {
+  "type": "host",
+  "opts": {
+   "mood": "happy"
+  },
+  "anchor": "see you in the next one",
+  "body": [],
+  "items": [],
+  "start": 49.94,
+  "end": 52.256,
+  "line": 12
+ }
+]

@@ -1,0 +1,53 @@
+# hello-aoi storyboard. One beat for every time the picture changes.
+
+== host mood=happy
+@ hi i'm aoi
+
+== big
+@ and this whole video came out of one folder
+This whole video came out of *one folder* on Nick's computer.
+
+== list title="All of it"
+@ my voice my face
+- My voice @ my voice
+- My face @ my face
+- Every screen you see @ every screen
+
+== host mood=wink
+@ see how it works
+
+== screen file=CLAUDE.md focus=1 title="anime-studio / CLAUDE.md"
+@ up top there's a file
+- 7-17 @ it tells any ai
+
+== screen file=CONTEXT.md focus=7-13 title="anime-studio / CONTEXT.md"
+@ then there's the context file
+- 9 @ five stages
+
+== title label="Five stages"
+@ first the voice
+The voice comes first
+
+== flow title="Then everything is timed to it"
+@ then every word gets timed
+- Voice @ then every word
+- Words @ gets timed
+- Storyboard @ then a storyboard
+- Animation @ then comes the animation
+- Render @ and last the render
+
+== host mood=determined
+@ and between every stage nick checks
+A person checks *every file* before the next stage runs.
+
+== host mood=happy
+@ that's the whole trick
+
+== list title="Build your own"
+@ take anything you do
+- One folder for each step @ make each step a folder
+- A short file in each folder @ give each folder
+- The AI walks through them @ and let the ai
+
+== host mood=happy
+@ see you in the next one

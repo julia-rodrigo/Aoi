@@ -1,0 +1,20 @@
+{
+  "This whole video came out of *one folder* on Nick's computer.": "この動画は全部、*ひとつのフォルダ*から生まれました。",
+  "All of it": "ぜんぶ",
+  "My voice": {"text": "わたしの声", "cue": "声"},
+  "My face": {"text": "わたしの顔", "cue": "顔"},
+  "Every screen you see": {"text": "見えている画面", "cue": "画面"},
+  "Five stages": "五つのステージ",
+  "The voice comes first": "まずは、声から",
+  "Then everything is timed to it": "すべてを声に合わせる",
+  "Voice": "声",
+  "Words": {"text": "言葉", "cue": "言葉"},
+  "Storyboard": {"text": "絵コンテ", "cue": "絵コンテ"},
+  "Animation": {"text": "アニメーション", "cue": "アニメーション"},
+  "Render": {"text": "レンダリング", "cue": "レンダリング"},
+  "A person checks *every file* before the next stage runs.": "次のステージの前に、人が*毎回ファイル*をチェック。",
+  "Build your own": "自分でも作ろう",
+  "One folder for each step": {"text": "ステップごとにフォルダ", "cue": "ステップ"},
+  "A short file in each folder": {"text": "それぞれに短いファイル", "cue": "短い"},
+  "The AI walks through them": {"text": "あとはAIが順番に実行", "cue": "あとは"}
+}
