@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compare</title>
+<style>
+  @font-face { font-family: 'Instrument Serif'; src: url('/kit/fonts/InstrumentSerif-Regular.ttf'); }
+  @font-face { font-family: 'Instrument Sans'; src: url('/kit/fonts/InstrumentSans.ttf'); font-weight: 400 700; }
+  :root {
+    --bg: #ffffff; --bg2: #f7f7f4; --fg: #141414; --muted: #6e6e66; --border: #e4e4df; --sep: #ecece7; --card-line: #e9e9e4;
+    --accent: #5d7740; --accent-hover: #51693a; --on-accent: #ffffff; --soft: #eef2e6; --on-soft: #3f5229; --warning: #b07a1e;
+    --card: #ffffff; --page: #ffffff; --card-shadow: none; --ring: inset 0 0 0 1px #e2e2dc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111210; --bg2: #1a1b17; --fg: #eceae2; --muted: #97978d; --border: rgba(255,255,255,.09); --sep: rgba(255,255,255,.07); --card-line: rgba(255,255,255,.075);
+      --accent: #8fa866; --accent-hover: #9db574; --on-accent: #10110e; --soft: rgba(143,168,102,.15); --on-soft: #b9cc95; --warning: #d6a85a;
+      --card: radial-gradient(120% 90% at 0% 0%, #2c2d27 0%, #1f201c 55%, #1a1b17 100%);
+      --page: radial-gradient(ellipse 85% 65% at 50% -12%, #2a2b25 0%, #1a1b17 48%, #111210 100%);
+      --card-shadow: 0 18px 44px rgba(0,0,0,.42); --ring: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { min-height: 100vh; background: var(--page); background-color: var(--bg); color: var(--fg); font: 400 .9375rem/1.5 'Instrument Sans', system-ui, sans-serif; }
+  main { max-width: 1320px; margin: 0 auto; padding: 32px 24px 48px; }
+  .back { color: var(--muted); font-size: .8125rem; text-decoration: none; }
+  .title-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+  h1 { font: 400 2.8rem/1.05 'Instrument Serif', serif; letter-spacing: -.01em; margin: 0; }
+  .guide { color: var(--muted); margin: 10px 0 24px; max-width: 680px; }
+  button { font: 500 .875rem 'Instrument Sans', sans-serif; border: 0; border-radius: 999px; cursor: pointer; }
+  .secondary { padding: 8px 18px; background: var(--card); background-color: var(--bg); color: var(--fg); box-shadow: var(--ring); }
+  .secondary[aria-pressed="true"] { background: var(--soft); color: var(--on-soft); }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+  .stage { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; border: 1px solid var(--card-line); cursor: pointer; }
+  .stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; visibility: hidden; }
+  .stage iframe.on { visibility: visible; }
+  .bar { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+  .play { padding: 8px 20px; background: var(--accent); color: var(--on-accent); min-width: 84px; }
+  .play:hover { background: var(--accent-hover); }
+  .track { flex: 1; height: 6px; border-radius: 999px; background: var(--sep); position: relative; cursor: pointer; }
+  .fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--accent); }
+  .time { color: var(--muted); font-size: .8125rem; font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
+  .strip { margin: 20px 0 0; }
+  .strip img { display: block; width: 100%; border-radius: 12px; border: 1px solid var(--card-line); }
+  .strip figcaption { color: var(--muted); font-size: .8125rem; margin-top: 8px; }
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .card { display: block; width: 100%; text-align: left; font: inherit; color: var(--fg); padding: 14px 16px; border-radius: 12px; background: var(--card); background-color: var(--bg); border: 1px solid var(--card-line); box-shadow: var(--card-shadow); cursor: pointer; }
+  .card[aria-current="true"] { background: var(--soft); border-color: var(--accent); }
+  .head { display: flex; align-items: center; gap: 10px; }
+  .num { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; border-radius: 999px; box-shadow: var(--ring); font-weight: 600; font-size: .8125rem; color: var(--muted); }
+  .card[aria-current="true"] .num { box-shadow: none; background: var(--accent); color: var(--on-accent); }
+  h2 { font: 400 1.5rem/1.1 'Instrument Serif', serif; margin: 0; flex: 1; }
+  .len { color: var(--muted); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+  .card p { margin: 6px 0 0; font-size: .875rem; }
+  .card .opens { color: var(--muted); }
+  .card .note { color: var(--warning); }
+  .meta { color: var(--muted); font-size: .8125rem; margin-top: 20px; }
+  kbd { font: 500 .75rem 'Instrument Sans', sans-serif; padding: 1px 7px; border-radius: 999px; box-shadow: var(--ring); }
+  @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { h1 { font-size: 2.25rem; } main { padding: 20px 16px 32px; } .meta { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="/kit/styles/gallery.html">← Anime studio</a>
+  <div class="title-row">
+    <h1 id="title">Compare</h1>
+    <button class="secondary" id="all" aria-pressed="false">Play all</button>
+  </div>
+  <p class="guide" id="guide"></p>
+  <div class="layout">
+    <section>
+      <div class="stage" id="stage"></div>
+      <div class="bar">
+        <button class="play" id="play">Play</button>
+        <div class="track" id="track"><div class="fill" id="fill"></div></div>
+        <span class="time" id="time">0:00 / 0:00</span>
+      </div>
+      <figure class="strip"><img id="strip" alt=""><figcaption>The first three seconds</figcaption></figure>
+    </section>
+    <aside class="list" id="list"></aside>
+  </div>
+  <p class="meta"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> … play that one · <kbd>Space</kbd> play or pause · <kbd>A</kbd> play all · <kbd>←</kbd> <kbd>→</kbd> 2 seconds</p>
+</main>
+<script>
+// One page for several videos of the studio: /kit/player/compare.html?set=intros reads /videos/intros.json
+// ({ title, guide, strip?, stripLabel?, items: [{ video, name, pitch, note }] }). Every video loads once in its own player;
+// only the one you watch draws, so a switch is instant.
+(async () => {
+  const set = new URLSearchParams(location.search).get('set') || 'intros';
+  const data = await (await fetch(`/videos/${set}.json?${Date.now()}`)).json();
+  document.getElementById('title').textContent = document.title = data.title;
+  document.getElementById('guide').textContent = data.guide || '';
+  document.querySelector('.strip figcaption').textContent = data.stripLabel || 'The first three seconds';
+  const stage = document.getElementById('stage'), list = document.getElementById('list'), strip = document.getElementById('strip');
+  const playBtn = document.getElementById('play'), allBtn = document.getElementById('all');
+  const ts = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  const items = data.items.map((it, i) => {
+    const frame = document.createElement('iframe');
+    frame.src = `/kit/player/player.html?video=${it.video}&embed=1`;
+    frame.allow = 'autoplay';
+    stage.appendChild(frame);
+    const card = document.createElement('button');
+    card.className = 'card';
+    card.innerHTML = '<div class="head"><span class="num"></span><h2></h2><span class="len"></span></div><p class="pitch"></p><p class="opens"></p><p class="note"></p>';
+    card.querySelector('.num').textContent = i + 1;
+    card.querySelector('h2').textContent = it.name;
+    card.querySelector('.pitch').textContent = it.pitch;
+    card.querySelector('.note').textContent = it.note || '';
+    card.onclick = () => pick(i, true);
+    list.appendChild(card);
+    // length and first subtitle line come from the video itself, so they stay true after a re-run
+    fetch(`/videos/${it.video}/bundle.json?${Date.now()}`).then((r) => r.json()).then((b) => {
+      card.querySelector('.len').textContent = `${b.duration.toFixed(1)} s`;
+      const l = b.langs && b.langs[b.master || (b.lang_order || [])[0]];
+      const first = l && l.subsBy && l.subsBy.en && l.subsBy.en[0];
+      if (first) card.querySelector('.opens').textContent = `Opens with “${first.t.replace(/\n/g, ' ')}”`;
+    }).catch(() => {});
+    return { ...it, frame, card };
+  });
+  const ctl = (x) => { const s = x.frame.contentWindow && x.frame.contentWindow.studio; return s && s.play ? s : null; };
+  let cur = 0, all = false;
+  function pick(i, play) {
+    items.forEach((x, j) => {
+      const s = ctl(x);
+      if (j !== i && s) { s.pause(); s.sleep = true; }
+      x.frame.classList.toggle('on', j === i);
+      x.card.setAttribute('aria-current', j === i);
+    });
+    cur = i;
+    strip.src = `/videos/${items[i].video}/stills/${data.strip || 'first3s.jpg'}?${Date.now()}`;
+    const go = () => {
+      const s = ctl(items[i]);
+      if (!s) return setTimeout(go, 100);   // the player is still loading
+      s.sleep = false;
+      if (play) { s.seekTo(0); s.play(); }
+    };
+    go();
+  }
+  const toggle = () => { const s = ctl(items[cur]); if (s) s.playing() ? s.pause() : s.play(); };
+  const setAll = (on) => { all = on; allBtn.setAttribute('aria-pressed', on); allBtn.textContent = on ? 'Playing all' : 'Play all'; };
+  playBtn.onclick = toggle;
+  stage.onclick = toggle;
+  allBtn.onclick = () => { if (all) return setAll(false); setAll(true); pick(0, true); };
+  document.getElementById('track').onclick = (e) => {
+    const s = ctl(items[cur]); if (!s) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    s.seekTo((e.clientX - r.left) / r.width * s.duration);
+  };
+  addEventListener('keydown', (e) => {
+    const s = ctl(items[cur]);
+    if (e.code === 'Space') { e.preventDefault(); toggle(); }
+    if (/^Digit[1-9]$/.test(e.code) && items[+e.code.slice(5) - 1]) { setAll(false); pick(+e.code.slice(5) - 1, true); }
+    if (e.code === 'KeyA') allBtn.click();
+    if (s && e.code === 'ArrowRight') s.seekTo(s.time() + 2);
+    if (s && e.code === 'ArrowLeft') s.seekTo(s.time() - 2);
+  });
+  list.addEventListener('click', () => setAll(false), true);
+  pick(0, false);
+  // the hidden players stop drawing once they are ready
+  const settle = setInterval(() => {
+    let left = 0;
+    items.forEach((x, j) => { const s = ctl(x); if (!s) left++; else if (j !== cur) s.sleep = true; });
+    if (!left) clearInterval(settle);
+  }, 200);
+  const tick = () => {
+    const s = ctl(items[cur]);
+    if (s) {
+      const t = s.time(), d = s.duration;
+      document.getElementById('fill').style.width = `${Math.min(100, t / d * 100)}%`;
+      document.getElementById('time').textContent = `${ts(t)} / ${ts(d)}`;
+      playBtn.textContent = s.playing() ? 'Pause' : 'Play';
+      if (all && s.ended()) { if (cur + 1 < items.length) pick(cur + 1, true); else setAll(false); }
+    }
+    requestAnimationFrame(tick);
+  };
+  tick();
+})();
+</script>
+</body>
+</html>
