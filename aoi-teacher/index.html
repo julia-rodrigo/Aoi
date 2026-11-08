@@ -478,6 +478,7 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     <div class="jp-section">
       <h3>Her first real lesson</h3>
       <p>This is the start of Aoi's narrated-lesson library, not the whole thing yet — one lesson today, more over time. She narrates in Japanese (her real voice, via Fish Audio), with the explanation shown in English as she goes — same as the rest of the app's dual-language material.</p>
+      <button class="btn primary" id="teacherStartBtn" type="button">Start the lesson</button>
     </div>
   </div>
 
@@ -2462,10 +2463,12 @@ function renderTeacherLesson(){
 function renderTeacherPicker(){
   setHeader("Learn with Aoi", "Teacher");
 }
-document.getElementById("teacherCardClaudeCode").addEventListener("click", function(){
+function startTeacherLesson(){
   renderTeacherLesson();
   showView("teacherLesson", {backTo:"teacher"});
-});
+}
+document.getElementById("teacherCardClaudeCode").addEventListener("click", startTeacherLesson);
+document.getElementById("teacherStartBtn").addEventListener("click", startTeacherLesson);
 
 /* ---------- hint: reuses the existing BYOK chat/LLM system (window.AoiChat, defined in the chat
    module below) to ask for a nudge toward the current question, never the answer itself. Does not
