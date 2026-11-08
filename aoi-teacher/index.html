@@ -368,6 +368,10 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
         <span class="badge" style="align-self:flex-start;">Aoi's Day</span>
         <h3 id="daytripHubTitle">Where Aoi Went Today</h3>
       </button>
+      <button class="hubcard" id="hubCardSales" type="button">
+        <span class="badge" style="align-self:flex-start;">Sales Practice</span>
+        <h3>Pitch It to Me</h3>
+      </button>
     </div>
   </div>
 
@@ -436,6 +440,31 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
       <h3>Past trips</h3>
       <div id="daytripLog"></div>
       <p class="hint" id="daytripLogEmpty">This is Aoi's first day out — check back tomorrow for a new one.</p>
+    </div>
+  </div>
+
+  <!-- SALES PRACTICE: pick a scenario, get Aoi's own technique tips (always available, no key
+       needed), then optionally roleplay the pitch against an AI customer who actually pushes
+       back, via the same BYOK chat used everywhere else. -->
+  <div id="view-sales" hidden>
+    <p class="hint">Pick a scenario. The customer in each one has a real reason to say no — your job is to find out what it is and make a genuine case, not just ask nicely.</p>
+    <div class="grid" id="salesGrid"></div>
+    <div class="pager" id="salesPager" hidden>
+      <button type="button" class="btn ghost tiny" id="salesPagerPrev" aria-label="Previous page">&larr;</button>
+      <span id="salesPagerLabel">1 / 1</span>
+      <button type="button" class="btn ghost tiny" id="salesPagerNext" aria-label="Next page">&rarr;</button>
+    </div>
+  </div>
+
+  <div id="view-sales-detail" hidden>
+    <div class="jp-section">
+      <h3 id="salesTitle">Scenario</h3>
+      <p id="salesSetup" class="hint"></p>
+      <button class="btn primary" id="salesStartBtn" type="button">Start the roleplay</button>
+    </div>
+    <div class="jp-section">
+      <h3>Aoi's technique tips for this one</h3>
+      <ul id="salesTips"></ul>
     </div>
   </div>
 
@@ -1588,7 +1617,9 @@ var views = {
   cooking: document.getElementById("view-cooking"),
   recipe: document.getElementById("view-recipe"),
   daily: document.getElementById("view-daily"),
-  daytrip: document.getElementById("view-daytrip")
+  daytrip: document.getElementById("view-daytrip"),
+  sales: document.getElementById("view-sales"),
+  salesDetail: document.getElementById("view-sales-detail")
 };
 var backTarget = null;
 /* Views that are paced narrated lessons get the landscape corner-host "teaching mode" layout
@@ -1620,6 +1651,7 @@ document.getElementById("btnBack").addEventListener("click", function(){
   if (backTarget === "subjectHome" && activeSubject){ renderSubjectHome(); showView("subjectHome", {backTo:"quizSelect"}); }
   else if (backTarget === "quizSelect"){ renderQuizSelect(); showView("quizSelect", {backTo:"hub"}); }
   else if (backTarget === "cooking"){ renderCookingSelect(); showView("cooking", {backTo:"hub"}); }
+  else if (backTarget === "sales"){ renderSalesSelect(); showView("sales", {backTo:"hub"}); }
   else { renderHub(); showView("hub"); }
 });
 
@@ -1657,6 +1689,7 @@ document.getElementById("hubCardSinging").addEventListener("click", function(){ 
 document.getElementById("hubCardCooking").addEventListener("click", function(){ renderCookingSelect(); showView("cooking", {backTo:"hub"}); });
 document.getElementById("hubCardDaily").addEventListener("click", function(){ renderDaily(); showView("daily", {backTo:"hub"}); });
 document.getElementById("hubCardDaytrip").addEventListener("click", function(){ renderDaytrip(); showView("daytrip", {backTo:"hub"}); });
+document.getElementById("hubCardSales").addEventListener("click", function(){ renderSalesSelect(); showView("sales", {backTo:"hub"}); });
 
 document.getElementById("hubCardPPL").addEventListener("click", function(){ openSubject("ppl"); });
 document.getElementById("hubCardGK").addEventListener("click", function(){ openSubject("gk"); });
@@ -2258,6 +2291,107 @@ document.getElementById("recipeTalkBtn").addEventListener("click", function(){
   if (window.AoiChat && window.AoiChat.openCooking) window.AoiChat.openCooking(activeRecipe);
 });
 
+/* ---------- sales practice: a curated set of realistic objection scenarios. Each has Aoi's own
+   coaching tips (static, always available, no API key needed -- this is "Aoi shows you how it
+   works") and an optional roleplay against an AI customer with that exact disposition, who
+   should push back for real rather than fold just because the user asked nicely (see
+   salesSystemPrompt() in the chat script, built from these same fields). ---------- */
+var SALES_SCENARIOS = [
+  {id:"skeptical-biz-owner", title:"The Skeptical Small Business Owner", product:"a monthly software subscription for inventory management",
+   persona:"Maria runs a small hardware store and has used a paper ledger for 15 years. She isn't against technology on principle, but she's watched other ‘time-saving’ tools eat up more time than they saved.",
+   disposition:"doubts the real ROI, and is worried about the learning curve for herself and her two employees",
+   tips:["Lead with what actually breaks today, not a feature list — ask what goes wrong with the paper system before pitching anything.",
+         "Offer a real way to test it risk-free — a trial on a slow week, not a vague promise.",
+         "Address the learning curve directly instead of brushing past it; show how little setup actually takes rather than just claiming it's easy."]},
+  {id:"locked-competitor", title:"Locked Into a Competitor's Contract", product:"a business phone/VoIP service",
+   persona:"David is an office manager at a mid-size accounting firm, eight months into a two-year contract with a competitor. He isn't thrilled with it, but switching feels like a hassle.",
+   disposition:"feels stuck, worried about cancellation fees and migration downtime",
+   tips:["Ask what specifically annoys him about the current service — that's the real lever, not a generic pitch.",
+         "Address switching costs head-on: can the cancellation fee be offset, or can a price be locked in now for when his contract ends?",
+         "Reduce the perceived risk by describing exactly how migration works and how little downtime to actually expect."]},
+  {id:"old-vacuum", title:"“My Old One Works Fine”", product:"a cordless stick vacuum",
+   persona:"Tom has had the same corded vacuum for twelve years. It's heavy and the cord is annoying, but it still picks things up.",
+   disposition:"doesn't see the problem as worth solving, and is price-sensitive",
+   tips:["Don't argue his vacuum is bad — ask about the specific moments it's annoying (cord length, carrying it upstairs) and let him surface the pain himself.",
+         "A live demo of weight and maneuverability beats describing specs on paper.",
+         "If price comes up, compare the cost against his actual usage, not a generic ‘it pays for itself’ line."]},
+  {id:"budget-frozen", title:"Budget's Frozen This Quarter", product:"a team collaboration tool",
+   persona:"Priya liked the product in the demo but says budget approval is frozen until next quarter.",
+   disposition:"genuinely budget-constrained, not necessarily uninterested",
+   tips:["Ask if there's a smaller starting tier, or a pilot, that fits an existing smaller budget line.",
+         "Find out exactly when budget reopens and offer to lock in today's pricing for a later start date.",
+         "Don't push past a real financial constraint — respect it, and offer a concrete next step instead of pressure."]},
+  {id:"privacy-parent", title:"The Privacy-Concerned Parent", product:"a kids' educational tablet app subscription",
+   persona:"Jordan likes the educational content but is worried about data privacy and screen time for their 8-year-old.",
+   disposition:"needs trust built before price even comes up",
+   tips:["Lead with concrete privacy and safety details — what data is collected, what parental controls exist — before talking price or features.",
+         "Offer a time-limited or screen-time-capped trial so the concern is addressed structurally, not just reassured away verbally.",
+         "Let them ask questions and sit with the trust-building stage — don't rush past it to close."]},
+  {id:"diy-pride", title:"Already Doing It Themselves (Badly)", product:"a professional lawn care service",
+   persona:"Alan mows and treats his own lawn every weekend. It takes him three-plus hours and the results are mediocre, but he takes some pride in doing it himself.",
+   disposition:"has an identity attachment to DIY, not a purely economic objection",
+   tips:["Respect the effort explicitly before pitching anything — don't make him feel judged for his current results.",
+         "Frame the service as freeing up his weekend for something he'd rather do, not as ‘you're bad at this.’",
+         "A one-time trial treatment, not a long contract, lowers the identity threat of switching."]},
+  {id:"underinsured", title:"“I Already Have Insurance”", product:"supplemental life insurance",
+   persona:"Keisha has basic employer-provided life insurance and assumes that's sufficient. She hasn't really thought about the gap.",
+   disposition:"underinformed about her actual coverage, not resistant as such",
+   tips:["Ask what her employer coverage actually covers — many people overestimate it — rather than just asserting it isn't enough.",
+         "Use her own numbers (income, dependents) to show any real gap, not generic industry statistics.",
+         "Avoid fear-based pressure — present the gap as information she can decide what to do with."]},
+  {id:"tech-skeptic-senior", title:"The Tech-Skeptic Retiree", product:"a medical alert wearable device",
+   persona:"Robert is 72, independent, and feels that a ‘medical alert button’ makes him seem old and dependent.",
+   disposition:"the resistance is emotional/identity-based, not about price or features",
+   tips:["The real objection here is emotional, not logical — address identity before features.",
+         "Reframe it as staying independent longer, not as fragility.",
+         "If a family member is part of the conversation, let their perspective support rather than lead — Robert needs to feel it's his choice."]},
+  {id:"price-shopper", title:"The Aggressive Price Shopper", product:"custom furniture (a dining table)",
+   persona:"Yuki has already gotten three quotes and is explicitly trying to negotiate your price down to match the cheapest one.",
+   disposition:"wants the lowest price, and needs to understand what's actually different between quotes",
+   tips:["Don't just drop the price — explain the specific differences in materials, craftsmanship, and warranty versus the cheap quote.",
+         "If there's room to negotiate, trade concessions (a longer lead time, a different wood) rather than simply caving on price.",
+         "It's fine to lose a price-only customer when the gap genuinely reflects a real quality difference — don't undercut your own value."]},
+  {id:"burned-before", title:"Burned by a Similar Product Before", product:"a meal-kit delivery subscription",
+   persona:"Chris tried a different meal kit two years ago, found the portions small and the food often arrived spoiled, and canceled.",
+   disposition:"skeptical specifically because of a bad past experience, not the category itself",
+   tips:["Acknowledge the past bad experience specifically, rather than being vaguely defensive or bad-mouthing competitors.",
+         "Address the SPECIFIC failures — portion size, spoilage — with concrete, verifiable claims, not generic reassurance.",
+         "A low-commitment trial (a single box, an easy cancel) matters more here than usual, since trust was already broken once."]}
+];
+var SALES_PER_PAGE = 6;
+var salesPage = 0;
+var activeScenario = null;
+
+function renderSalesSelect(){
+  setHeader("Pitch It to Me", "Sales Practice");
+  var grid = document.getElementById("salesGrid");
+  var start = wirePager(document.getElementById("salesPager"), document.getElementById("salesPagerLabel"),
+    document.getElementById("salesPagerPrev"), document.getElementById("salesPagerNext"),
+    SALES_SCENARIOS.length, SALES_PER_PAGE, {get page(){return salesPage;}, set page(v){salesPage=v;}}, renderSalesSelect);
+  grid.innerHTML = "";
+  SALES_SCENARIOS.slice(start, start + SALES_PER_PAGE).forEach(function(s){
+    var btn = document.createElement("button");
+    btn.className = "card"; btn.type = "button";
+    btn.innerHTML = '<h3>' + s.title + '</h3><p class="hint">Selling: ' + esc_(s.product) + '</p>';
+    btn.addEventListener("click", function(){ openScenario(s.id); });
+    grid.appendChild(btn);
+  });
+}
+function openScenario(id){
+  var s = SALES_SCENARIOS.filter(function(x){ return x.id === id; })[0];
+  if (!s) return;
+  activeScenario = s;
+  setHeader(s.title, "Sales Practice");
+  document.getElementById("salesTitle").textContent = s.title;
+  document.getElementById("salesSetup").textContent = "You're selling " + s.product + ". " + s.persona + " Going in, they " + s.disposition + ".";
+  var tips = document.getElementById("salesTips"); tips.innerHTML = "";
+  s.tips.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; tips.appendChild(li); });
+  showView("salesDetail", {backTo:"sales"});
+}
+document.getElementById("salesStartBtn").addEventListener("click", function(){
+  if (window.AoiChat && window.AoiChat.openSales) window.AoiChat.openSales(activeScenario);
+});
+
 /* ---------- daily chat: a casual, non-study space, with an optional local journal ---------- */
 var JOURNAL_KEY = "aoi_journal_v1";
 function loadJournal(){ try{ var raw = localStorage.getItem(JOURNAL_KEY); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } }
@@ -2646,6 +2780,8 @@ var THINK_LINES = ["Take your time \u2014 read every choice before you pick.", "
 var COOKING_LINES = ["Browse a recipe, or tap one and I'll talk you through it.", "What are we making today?"];
 var RECIPE_LINES = ["Looks good \u2014 want me to walk you through it step by step?"];
 var DAILY_LINES = ["Hey \u2014 how's your day going?", "No studying here, just chatting if you want."];
+var SALES_LINES = ["Pick a scenario \u2014 everyone here has a real reason to say no.", "Sales is finding out why they'd say no, then actually answering it."];
+var SALES_DETAIL_LINES = ["Here's what I'd watch for \u2014 then try it yourself."];
 
 window.AoiHost = {
   say: say, /* exposed so paced lesson content (e.g. the Japanese view) can drive her line directly */
@@ -2657,6 +2793,8 @@ window.AoiHost = {
     else if (name === 'cooking') say(pick(COOKING_LINES), { pose: 'present_l', eyes: 'eyes_happy' });
     else if (name === 'recipe') say(pick(RECIPE_LINES), { pose: 'point_l', eyes: 'eyes_happy' });
     else if (name === 'daily') say(pick(DAILY_LINES), { pose: 'present_r', eyes: 'eyes_happy' });
+    else if (name === 'sales') say(pick(SALES_LINES), { pose: 'point_r', eyes: 'eyes_think' });
+    else if (name === 'salesDetail') say(pick(SALES_DETAIL_LINES), { pose: 'present_l', eyes: 'eyes_think' });
     /* japanese: renderJapanese()'s own jpRenderBeat() drives her line directly (paced lesson beats);
        quiz and results are driven by think()/react()/celebrate() below, at their own specific moments */
   },
@@ -2706,9 +2844,10 @@ var LS = {
    everywhere), but each keeps its OWN history and system prompt, so a study conversation never
    bleeds into a recipe chat or the daily check-in, and vice versa. 'study' keeps the original
    history key for backward compatibility with chats saved before Cooking/Daily existed. */
-var HISTORY_KEY_FOR = { study: LS.history, cooking: 'aoi_chat_history_cooking_v1', daily: 'aoi_chat_history_daily_v1' };
+var HISTORY_KEY_FOR = { study: LS.history, cooking: 'aoi_chat_history_cooking_v1', daily: 'aoi_chat_history_daily_v1', sales: 'aoi_chat_history_sales_v1' };
 var currentContext = 'study';
 var contextRecipe = null; /* the recipe being discussed, when currentContext === 'cooking' */
+var contextScenario = null; /* the sales scenario being roleplayed, when currentContext === 'sales' */
 
 function get(k, d){ try{ var v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }
 function set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
@@ -2732,6 +2871,7 @@ function hasKey(){
 function systemPrompt(){
   if (currentContext === 'cooking') return cookingSystemPrompt();
   if (currentContext === 'daily') return dailySystemPrompt();
+  if (currentContext === 'sales') return salesSystemPrompt();
   return studySystemPrompt();
 }
 function studySystemPrompt(){
@@ -2777,6 +2917,23 @@ function dailySystemPrompt(){
     lines.push('', 'Today you "went" to ' + dest.place + ' (' + dest.kind + '). You may naturally mention it if it fits the conversation (e.g. the user asks what you did today), using only these real facts about it — never invent extra ones: ' + dest.facts.join(' '));
   }
   return lines.join('\n');
+}
+function salesSystemPrompt(){
+  var s = contextScenario;
+  if (!s){
+    return 'You are a potential customer in a sales roleplay inside the "Aoi Teacher" app, but no scenario was selected. Tell the user plainly to go back and pick a scenario first — do not improvise one.';
+  }
+  return [
+    'You are roleplaying as a specific potential customer, by name, inside a sales-practice feature of the "Aoi Teacher" app. This is NOT Aoi — stay fully in character as this person for the whole conversation, in first person, and never break character to give meta-commentary or coaching (Aoi handles coaching separately, outside this chat).',
+    '',
+    'Who you are: ' + s.persona,
+    'What is being pitched to you: ' + s.product + '.',
+    'Your disposition going in: you ' + s.disposition + '.',
+    '',
+    'Play this fairly but with real resistance. You genuinely need a good reason to say yes — raise real, specific objections that fit your situation (not generic stalling), ask real questions, and do not fold just because the user is polite, enthusiastic, or asks nicely. Actively look for reasons this would NOT actually benefit you, and say so. Only start coming around if the user directly and specifically addresses your actual concern with a real answer — not with empty reassurance or a generic pitch. It is fine, and realistic, to end the conversation still unconvinced if they never actually address your real objection.',
+    '',
+    'Keep replies conversational and in-character, like a real person talking — not a bullet-point list of objections. Keep them reasonably short (2-5 sentences) unless the conversation naturally calls for more. Never mention that you are an AI or that this is a roleplay; never output navigation tags; never offer sales coaching yourself (that is Aoi\'s job, in a separate part of the app).'
+  ].join('\n');
 }
 
 /* ---------- nav tag parsing: strip [[nav:...]] tags from the displayed reply, act on the first ---------- */
@@ -2854,7 +3011,8 @@ window.AoiChat = {
   hasKey: hasKey,
   ask: function(userContent){ return sendToProvider([{role:'user', content:userContent}]); },
   openCooking: function(recipe){ contextRecipe = recipe || null; openChat('cooking'); },
-  openDaily: function(){ openChat('daily'); }
+  openDaily: function(){ openChat('daily'); },
+  openSales: function(scenario){ contextScenario = scenario || null; openChat('sales'); }
 };
 
 /* ---------- UI wiring ---------- */
@@ -2894,8 +3052,10 @@ function openDaytripTranscript(){
 function openChat(context){
   currentContext = context || 'study';
   if (currentContext !== 'cooking') contextRecipe = null;
+  if (currentContext !== 'sales') contextScenario = null;
   $panelTitle.textContent = currentContext === 'cooking' ? ('Cooking' + (contextRecipe ? ': ' + contextRecipe.title : '')) :
-    currentContext === 'daily' ? "How's Your Day?" : 'Talk to Aoi';
+    currentContext === 'daily' ? "How's Your Day?" :
+    currentContext === 'sales' ? ('Roleplay' + (contextScenario ? ': ' + contextScenario.title : '')) : 'Talk to Aoi';
   $saveJournalBtn.hidden = currentContext !== 'daily';
   renderHistory();
   $noKey.hidden = hasKey();
