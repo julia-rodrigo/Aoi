@@ -104,6 +104,98 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .pill{display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:12px; padding:4px 10px; border-radius:999px;}
 .pill.pass{background:var(--good-bg); color:var(--good);}
 .pill.fail{background:var(--bad-bg); color:var(--bad);}
+/* ---------- mockScene: faithful, reusable port of the original "Aoi explains" page's scene-card
+   mockups (phone UI, diagrams, terminal, checklist, etc.) -- NOT tutorial-specific. Any narrated
+   lesson's beat can use this same icon set (MOCK_ICONS, in the script below) and these same classes
+   to build a real mockup card, the way the Claude Code lesson does. Ported 1:1 from the original
+   page's structure/markup; only the color values are swapped for this app's theme variables (the
+   original was light-only/fixed-color) so it reads correctly in both themes, and border-radius is
+   re-asserted with !important since the app's global pixel treatment (*{border-radius:0!important})
+   would otherwise flatten these corners -- a more specific selector + !important legitimately wins
+   over a less specific one even when both are !important, so this is not a hack, just normal
+   cascade precedence. Shadows use the app's own --chrome-shadow (already "none" in dark/pixel mode,
+   a soft shadow in light mode) instead of the original's hardcoded shadow, so it auto-adapts. */
+.mockScene{max-width:300px; margin:0 auto;}
+.mockScene .phone{border:2px solid var(--fg); border-radius:22px!important; padding:10px 10px 12px; background:var(--surface); max-width:300px; margin:0 auto; position:relative; overflow:hidden;}
+.mockScene .phone .notch{width:70px; height:6px; border-radius:4px!important; background:var(--fg); margin:0 auto 10px; opacity:.85;}
+.mockScene .apphead{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.mockScene .apphead h3{font-size:20px; font-weight:800; font-family:var(--font-display);}
+.mockScene .tabs{display:flex; gap:6px;}
+.mockScene .tabs span{font-size:11px; font-weight:700; padding:4px 9px; border-radius:12px!important; background:var(--surface-2); color:var(--muted);}
+.mockScene .tabs span.on{background:var(--accent); color:var(--accent-fg);}
+.mockScene .sess{display:flex; align-items:center; gap:10px; padding:10px; border-radius:14px!important; background:var(--surface-2); margin-bottom:8px; opacity:0; animation:tutPop .4s ease-out both;}
+.mockScene .sess .ic{width:34px; height:34px; border-radius:10px!important; display:grid; place-items:center; flex:none; background:var(--surface); color:var(--accent-2);}
+.mockScene .sess .ic svg{width:20px; height:20px;}
+.mockScene .sess b{display:block; font-size:14px;}
+.mockScene .sess small{font-size:11px; color:var(--muted);}
+.mockScene .sess .st{margin-left:auto; font-size:10px; font-weight:800; padding:3px 7px; border-radius:8px!important; background:var(--surface-2); color:var(--accent);}
+.mockScene .d1{animation-delay:.2s!important;} .mockScene .d2{animation-delay:.45s!important;} .mockScene .d3{animation-delay:.7s!important;}
+.mockScene .d4{animation-delay:1s!important;} .mockScene .d5{animation-delay:1.3s!important;} .mockScene .d6{animation-delay:1.6s!important;}
+.mockScene .fab{position:absolute; right:14px; bottom:14px; width:40px; height:40px; border-radius:14px!important; background:var(--accent); color:var(--accent-fg); display:grid; place-items:center; font-size:24px; font-weight:300;}
+.mockScene .two{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.mockScene .lane{border-radius:16px!important; background:var(--surface-2); padding:12px 8px; text-align:center; opacity:0; animation:tutPop .45s ease-out both;}
+.mockScene .lane h4{font-size:13px; font-weight:800; margin-bottom:8px; font-family:var(--font-display);}
+.mockScene .lane .pic{display:flex; flex-direction:column; align-items:center; gap:4px;}
+.mockScene .lane .pic svg{width:40px; height:40px; color:var(--accent);}
+.mockScene .lane .lbl{font-size:11px; color:var(--muted); font-weight:600;}
+.mockScene .lane .arrow{color:var(--accent-2); font-size:18px; line-height:1;}
+.mockScene .lane.cloud{box-shadow:inset 0 0 0 2px var(--accent-2);}
+.mockScene .chips{display:flex; gap:6px; flex-wrap:wrap; margin:10px 0;}
+.mockScene .chip{font-size:12px; font-weight:700; border:1.5px solid var(--line); border-radius:14px!important; padding:5px 10px; display:inline-flex; align-items:center; gap:5px;}
+.mockScene .chip.cy{border-color:var(--accent-2); color:var(--accent); background:var(--surface-2);}
+.mockScene .input{border:1.5px solid var(--line); border-radius:14px!important; padding:10px 12px; font-size:13px; color:var(--muted); display:flex; align-items:center; justify-content:space-between;}
+.mockScene .send{width:30px; height:30px; border-radius:10px!important; background:var(--accent); color:var(--accent-fg); display:grid; place-items:center;}
+.mockScene .send svg{width:16px; height:16px;}
+.mockScene .sheet{position:relative; background:var(--surface); border-top:1.5px solid var(--line); border-radius:18px 18px 0 0!important; padding:10px 12px 12px; margin-top:10px; box-shadow:var(--chrome-shadow);}
+.mockScene .sheet .grab{width:36px; height:4px; border-radius:3px!important; background:var(--line); margin:0 auto 8px;}
+.mockScene .sheet h5{font-size:14px; font-weight:800; margin-bottom:6px; font-family:var(--font-display);}
+.mockScene .repo{display:flex; align-items:center; gap:8px; font-size:13px; padding:7px 8px; border-radius:10px!important;}
+.mockScene .repo svg{width:15px; height:15px; color:var(--muted); flex:none;}
+.mockScene .repo.hl{background:var(--surface-2); font-weight:700;}
+.mockScene .gh h3{font-size:16px; font-weight:800; margin-bottom:2px; font-family:var(--font-display);}
+.mockScene .gh p.s{font-size:11px; color:var(--muted); margin-bottom:10px;}
+.mockScene .radio{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:12px!important; font-size:14px; font-weight:600; margin-bottom:6px; border:1.5px solid var(--line);}
+.mockScene .radio i{width:18px; height:18px; border-radius:50%!important; border:2px solid var(--muted); flex:none; position:relative; display:block;}
+.mockScene .radio.on{border-color:var(--accent-2); background:var(--surface-2);}
+.mockScene .radio.on i{border-color:var(--accent);}
+.mockScene .dotfill{position:absolute; inset:3px; border-radius:50%!important; background:var(--accent); opacity:0;}
+.mockScene .radio.on .dotfill{opacity:1;}
+.mockScene .picked{display:flex; flex-direction:column; gap:5px; margin:4px 0 0 28px;}
+.mockScene .picked .repo{border:1.5px dashed var(--line); opacity:0; animation:tutPop .35s ease-out both;}
+.mockScene .lock{margin-left:auto; font-size:10px; font-weight:800; color:var(--muted); letter-spacing:.06em;}
+.mockScene .desk{display:flex; align-items:flex-end; justify-content:center; gap:6px;}
+.mockScene .laptop{width:62%;}
+.mockScene .screen{background:var(--fg); border-radius:10px 10px 4px 4px!important; padding:10px; font:600 11px/1.55 var(--font-mono); color:var(--bg); min-height:104px;}
+.mockScene .screen .p{color:var(--accent-2);}
+.mockScene .screen .t{opacity:0; animation:tutPop .3s ease-out both;}
+.mockScene .base{height:9px; background:var(--muted); border-radius:0 0 10px 10px!important; margin:0 -10px;}
+.mockScene .link{flex:1; align-self:center; height:2px; background:repeating-linear-gradient(90deg,var(--accent-2) 0 6px,transparent 6px 11px); background-size:22px 2px; margin-bottom:22px;}
+.mockScene .mini{width:58px; border:2px solid var(--fg); border-radius:12px!important; padding:6px 5px; background:var(--surface);}
+.mockScene .mini .bar{height:5px; border-radius:3px!important; background:var(--surface-2); margin-bottom:4px;}
+.mockScene .mini .bar.c{background:var(--accent-2);}
+.mockScene .mini .pad{display:grid; grid-template-columns:1fr 1fr; gap:3px; margin-top:6px;}
+.mockScene .mini .pad i{height:10px; border-radius:3px!important; background:var(--surface-2); display:block;}
+.mockScene .badges{display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap;}
+.mockScene .badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:6px 10px; border-radius:12px!important; background:var(--surface-2);}
+.mockScene .badge .led{width:8px; height:8px; border-radius:50%!important; background:var(--good); animation:tutPulse 1.4s ease-in-out infinite;}
+.mockScene .check{list-style:none; margin:0; padding:0;}
+.mockScene .check li{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:14px!important; background:var(--surface-2); margin-bottom:8px; font-size:15px; font-weight:700;}
+.mockScene .check .n{font-size:11px; color:var(--muted); font-weight:800; width:14px;}
+.mockScene .check .bx{width:24px; height:24px; border-radius:8px!important; border:2px solid var(--line); display:grid; place-items:center; flex:none; margin-left:auto; background:var(--accent); border-color:var(--accent);}
+.mockScene .check .bx svg{width:14px; height:14px; color:var(--accent-fg);}
+.mockScene .check .mono{font:600 12px var(--font-mono); color:var(--accent); background:var(--surface); border:1px solid var(--line); border-radius:6px!important; padding:1px 5px;}
+.mockScene .toast{display:flex; align-items:center; gap:10px; background:var(--fg); color:var(--bg); border-radius:14px!important; padding:10px 12px; margin-top:10px; opacity:0; animation:tutPop .4s ease-out both;}
+.mockScene .toast .okc{width:24px; height:24px; border-radius:50%!important; background:var(--good); display:grid; place-items:center; flex:none;}
+.mockScene .toast .okc svg{width:14px; height:14px; color:var(--bg);}
+.mockScene .toast b{font-size:13px; display:block;}
+.mockScene .toast small{font-size:11px; opacity:.75;}
+.mockScene .spark{position:absolute; color:var(--accent-2); font-size:18px; opacity:0; animation:tutSparkle 1.6s ease-in-out infinite;}
+.mockScene .diff{font:600 11px/1.6 var(--font-mono); border-radius:10px!important; background:var(--surface-2); padding:8px 10px;}
+.mockScene .diff .a{color:var(--good);}
+@keyframes tutPop{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+@keyframes tutPulse{50%{box-shadow:0 0 0 6px transparent;}}
+@keyframes tutSparkle{0%,100%{opacity:0; transform:scale(.4);} 50%{opacity:1; transform:scale(1);}}
+@media (max-width:360px){ .mockScene .mini{display:none;} }
 .breakdown{display:flex; flex-direction:column; gap:8px;}
 .brow{display:grid; grid-template-columns:150px 1fr 50px; align-items:center; gap:10px; font-size:13px;}
 .brow .name{color:var(--muted); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -375,11 +467,31 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     </div>
   </div>
 
-  <!-- TEACHER (narrated lessons; honest placeholder — no narrated-video content exists yet) -->
+  <!-- TEACHER: picker (one real lesson so far; more will land here over time) -->
   <div id="view-teacher" hidden>
+    <div class="hubgrid">
+      <button class="hubcard" id="teacherCardClaudeCode" type="button">
+        <span class="badge" style="align-self:flex-start;">Teacher</span>
+        <h3>Claude Code on Your Phone</h3>
+      </button>
+    </div>
     <div class="jp-section">
-      <h3>No narrated lesson here yet</h3>
-      <p>This is where Aoi's recorded, narrated lessons will live — that pipeline isn't wired up yet, so there's nothing built here right now. The Japanese Pronunciation lesson in Singing mode already works the way a Teacher lesson will: small explained beats, quick checks, and a transcript. For now, head to Quiz to drill real questions, or Singing for that lesson.</p>
+      <h3>Her first real lesson</h3>
+      <p>This is the start of Aoi's narrated-lesson library, not the whole thing yet — one lesson today, more over time. She narrates in Japanese (her real voice, via Fish Audio), with the explanation shown in English as she goes — same as the rest of the app's dual-language material.</p>
+    </div>
+  </div>
+
+  <!-- TEACHER LESSON: Claude Code on your phone, narrated beat by beat in Japanese (real audio),
+       English text on screen -- same paced-lesson pattern as Singing/Aoi's Day. -->
+  <div id="view-teacher-lesson" hidden>
+    <div class="jpTopline">
+      <span></span>
+      <button class="btn ghost tiny" id="teacherTranscriptBtn" type="button">Transcript</button>
+    </div>
+    <div class="jpLesson">
+      <div id="teacherVisual"></div>
+      <button class="btn ghost tiny" id="teacherReplayBtn" type="button" style="align-self:flex-start;">&#128266; Replay her line</button>
+      <button class="btn primary" id="teacherBeatNext" type="button">Continue</button>
     </div>
   </div>
 
@@ -721,6 +833,16 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
       </div>
     </div>
     <div id="daytripTranscript" class="jpTranscriptLog"></div>
+  </div>
+
+  <div id="teacherTranscriptPanel" class="overlayPanel" hidden>
+    <div class="panelHead">
+      <span class="panelTitle">Transcript</span>
+      <div class="panelHeadBtns">
+        <button type="button" id="teacherTranscriptCloseBtn" class="navbtn" aria-label="Close transcript">&times;</button>
+      </div>
+    </div>
+    <div id="teacherTranscript" class="jpTranscriptLog"></div>
   </div>
 
   <div id="overlayBackdrop" hidden></div>
@@ -1609,6 +1731,7 @@ function pct(n){ return Math.round(n); }
 var views = {
   hub: document.getElementById("view-hub"),
   teacher: document.getElementById("view-teacher"),
+  teacherLesson: document.getElementById("view-teacher-lesson"),
   quizSelect: document.getElementById("view-quiz-select"),
   subjectHome: document.getElementById("view-subject-home"),
   quiz: document.getElementById("view-quiz"),
@@ -1625,7 +1748,7 @@ var backTarget = null;
 /* Views that are paced narrated lessons get the landscape corner-host "teaching mode" layout
    (see .wrap.teachMode CSS) instead of the portrait scene-player stack. Today: Japanese
    Pronunciation and Aoi's Day. Add future narrated-lesson views here too. */
-var TEACH_VIEWS = {japanese:1, daytrip:1};
+var TEACH_VIEWS = {japanese:1, daytrip:1, teacherLesson:1};
 var wrapEl = document.querySelector(".wrap");
 /* Single header line: title, with an optional small highlighted category tag right after it on
    the same line, instead of a separate kicker line sitting above the title (ate an extra row of
@@ -1652,6 +1775,7 @@ document.getElementById("btnBack").addEventListener("click", function(){
   else if (backTarget === "quizSelect"){ renderQuizSelect(); showView("quizSelect", {backTo:"hub"}); }
   else if (backTarget === "cooking"){ renderCookingSelect(); showView("cooking", {backTo:"hub"}); }
   else if (backTarget === "sales"){ renderSalesSelect(); showView("sales", {backTo:"hub"}); }
+  else if (backTarget === "teacher"){ showView("teacher", {backTo:"hub"}); }
   else { renderHub(); showView("hub"); }
 });
 
@@ -1683,7 +1807,7 @@ function renderQuizSelect(){
   document.getElementById("hubGKSub").textContent = gkBuiltCount + " of " + MASTER_TOPICS.length + " topics built so far (" + SUBJECTS.gk.questions.length + " questions) \u2014 " + gkAnswered + " answered.";
 }
 
-document.getElementById("hubCardTeacher").addEventListener("click", function(){ showView("teacher", {backTo:"hub"}); });
+document.getElementById("hubCardTeacher").addEventListener("click", function(){ renderTeacherPicker(); showView("teacher", {backTo:"hub"}); });
 document.getElementById("hubCardQuiz").addEventListener("click", function(){ renderQuizSelect(); showView("quizSelect", {backTo:"hub"}); });
 document.getElementById("hubCardSinging").addEventListener("click", function(){ renderJapanese(); showView("japanese", {backTo:"hub"}); });
 document.getElementById("hubCardCooking").addEventListener("click", function(){ renderCookingSelect(); showView("cooking", {backTo:"hub"}); });
@@ -2186,6 +2310,162 @@ function renderJapanese(){
   jpTranscript = [];
   jpRenderBeat();
 }
+
+/* ---------- Shared mockup icon set, reusable by any narrated lesson's scene card (see .mockScene
+   CSS above) -- ported verbatim from the original explainer page's icon set, not tutorial-specific. */
+var MOCK_ICONS = {
+  cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.1 9.2 4.5 4.5 0 0 0 7 18z"/></svg>',
+  laptop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg>',
+  repo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v16H7.5A2.5 2.5 0 0 0 5 20.5z"/><path d="M5 20.5A2.5 2.5 0 0 0 7.5 23H19v-5"/></svg>',
+  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+};
+var MOCK_ICON_SM = function(name, size){ return MOCK_ICONS[name].replace('<svg', '<svg width="' + size + '" height="' + size + '"'); };
+
+/* ---------- Teacher lesson: "Claude Code on your phone" ----------
+   Same content/scenes as the original standalone explainer (root index.html), retold here as a
+   paced beat lesson. Per the user's explicit instruction: she narrates in JAPANESE (real audio,
+   Fish Audio, static files -- no live API call, so this works in the APK too), on-screen text
+   stays ENGLISH -- matching aoi-kit's own default convention (Japanese voice, English captions).
+   The `visual` for each beat is a faithful 1:1 port of that scene's actual markup from the
+   original page (not a loose re-interpretation), wrapped in .mockScene so it reuses the shared
+   CSS/icon system above -- any future narrated lesson's beats can build their own mockup cards
+   the same way, using MOCK_ICONS and these same .phone/.two/.gh/.desk/.check/.diff classes. */
+var TUTOR_LESSON = [
+  {
+    text: "Hi, I'm Aoi! Today, let's look at Claude Code on your phone. It's easier than you think!",
+    pose: "present_r", eyes: "eyes_happy", audio: "audio/tutorial/scene1_hello.mp3",
+    visual: '<div class="mockScene"><div class="ctag">The Code tab</div>' +
+      '<div class="phone"><div class="notch"></div>' +
+      '<div class="apphead"><h3>Code</h3><div class="tabs"><span class="on">Sessions</span><span>Repos</span></div></div>' +
+      '<div class="sess d1"><div class="ic">' + MOCK_ICONS.cloud + '</div><div><b>Default</b><small>Cloud session</small></div><span class="st">CLOUD</span></div>' +
+      '<div class="sess d2"><div class="ic">' + MOCK_ICONS.laptop + '</div><div><b>Remote control</b><small>On your computer</small></div><span class="st">LIVE</span></div>' +
+      '<div style="height:46px"></div><div class="fab">+</div>' +
+      '</div></div>'
+  },
+  {
+    text: "There are two kinds of sessions. Cloud sessions run on Anthropic's cloud and work from a GitHub repo. Remote control sessions run on your computer, and your phone is the remote.",
+    pose: "point_r", eyes: null, audio: "audio/tutorial/scene2_sessions.mp3",
+    visual: '<div class="mockScene"><div class="ctag">Two kinds of sessions</div>' +
+      '<div class="two">' +
+      '<div class="lane cloud d1"><h4>Cloud</h4><div class="pic">' + MOCK_ICONS.cloud + '<span class="lbl">Anthropic’s cloud</span><span class="arrow">&darr;</span>' + MOCK_ICONS.repo + '<span class="lbl">GitHub repo</span></div></div>' +
+      '<div class="lane d4"><h4>Remote control</h4><div class="pic">' + MOCK_ICONS.phone + '<span class="lbl">Your phone</span><span class="arrow">&darr;</span>' + MOCK_ICONS.laptop + '<span class="lbl">Your computer</span></div></div>' +
+      '</div></div>'
+  },
+  {
+    text: "Cloud sessions need a repo. Tap send without one, and the Repositories list pops right up!",
+    pose: "present_l", eyes: null, audio: "audio/tutorial/scene3_repo.mp3",
+    visual: '<div class="mockScene"><div class="ctag">New session</div>' +
+      '<div class="phone" style="min-height:290px"><div class="notch"></div>' +
+      '<div class="apphead"><h3 style="font-size:17px">New session</h3></div>' +
+      '<div class="input"><span>Fix the login bug&hellip;</span><span class="send">' + MOCK_ICONS.send + '</span></div>' +
+      '<div class="chips"><span class="chip cy">' + MOCK_ICON_SM('cloud', 13) + ' Default</span><span class="chip">+ Add repository</span></div>' +
+      '<div class="sheet"><div class="grab"></div><h5>Repositories</h5>' +
+      '<div class="repo hl">' + MOCK_ICONS.repo + ' julia-rodrigo/test</div>' +
+      '<div class="repo">' + MOCK_ICONS.repo + ' Add from GitHub&hellip;</div>' +
+      '</div></div></div>'
+  },
+  {
+    text: "Want your other projects to stay private? In the Claude GitHub app settings, pick “Only select repositories” and choose just one, like test.",
+    pose: "present_l", eyes: "eyes_think", audio: "audio/tutorial/scene4_private.mp3",
+    visual: '<div class="mockScene"><div class="ctag">github.com &middot; Claude app settings</div>' +
+      '<div class="gh"><h3>Repository access</h3><p class="s">Choose what Claude can see</p>' +
+      '<div class="radio off"><i><span class="dotfill"></span></i>All repositories</div>' +
+      '<div class="radio on"><i><span class="dotfill"></span></i>Only select repositories</div>' +
+      '<div class="picked">' +
+      '<div class="repo hl d4">' + MOCK_ICONS.repo + ' julia-rodrigo/test</div>' +
+      '<div class="repo d5" style="color:var(--muted)">' + MOCK_ICONS.repo + ' other projects <span class="lock">PRIVATE</span></div>' +
+      '</div></div></div>'
+  },
+  {
+    text: "No GitHub at all? No problem! Start Claude Code on your computer and steer it from your phone. Just keep the computer on and awake.",
+    pose: "point_l", eyes: null, audio: "audio/tutorial/scene5_remote.mp3",
+    visual: '<div class="mockScene"><div class="ctag">Remote control</div>' +
+      '<div class="desk"><div class="laptop"><div class="screen">' +
+      '<div class="t d1"><span class="p">$</span> claude</div>' +
+      '<div class="t d2">&#10023; Welcome to Claude Code</div>' +
+      '<div class="t d3"><span class="p">&rsaquo;</span> /remote-control</div>' +
+      '<div class="t d4" style="color:var(--good)">&#9679; Phone connected</div>' +
+      '</div><div class="base"></div></div>' +
+      '<div class="link"></div>' +
+      '<div class="mini"><div class="bar c"></div><div class="bar"></div><div class="bar" style="width:70%"></div><div class="pad"><i></i><i></i><i></i><i></i></div></div>' +
+      '</div>' +
+      '<div class="badges"><span class="badge"><span class="led"></span>Computer on</span><span class="badge"><span class="led"></span>Awake</span></div>' +
+      '</div>'
+  },
+  {
+    text: "Let's recap! New session. Add repository. Pick a repo. Then type and send. That's all!",
+    pose: null, eyes: null, audio: "audio/tutorial/scene6_recap.mp3",
+    visual: '<div class="mockScene"><div class="ctag">Your checklist</div>' +
+      '<ul class="check">' +
+      '<li><span class="n">1</span>New session<span class="bx">' + MOCK_ICONS.check + '</span></li>' +
+      '<li><span class="n">2</span>Add repository<span class="bx">' + MOCK_ICONS.check + '</span></li>' +
+      '<li><span class="n">3</span>Pick a repo <span class="mono">test</span><span class="bx">' + MOCK_ICONS.check + '</span></li>' +
+      '<li><span class="n">4</span>Type and send<span class="bx">' + MOCK_ICONS.check + '</span></li>' +
+      '</ul></div>'
+  },
+  {
+    text: "And that's it! Now go build something. See you next time!",
+    pose: "present_r", eyes: "eyes_happy", audio: "audio/tutorial/scene7_outro.mp3",
+    visual: '<div class="mockScene"><div class="ctag">Your turn</div>' +
+      '<div style="position:relative">' +
+      '<span class="spark" style="right:6px;top:-26px">&#10022;</span><span class="spark" style="right:34px;top:-12px;animation-delay:.5s;font-size:12px">&#10022;</span>' +
+      '<div class="diff d1"><div><span class="a">+</span> aoi/index.html</div><div><span class="a">+</span> aoi/README.md</div></div>' +
+      '<div class="toast d3"><span class="okc">' + MOCK_ICONS.check + '</span><div><b>Pushed to aoi</b><small>julia-rodrigo/test &middot; just now</small></div></div>' +
+      '<div class="toast d5" style="background:var(--accent)"><span class="okc" style="background:var(--accent-2)">' + MOCK_ICONS.check + '</span><div><b>Session finished</b><small>Ready for your review</small></div></div>' +
+      '</div></div>'
+  }
+];
+var tutorIdx = 0;
+var tutorTranscript = [];
+var $tutorAudio = new Audio();
+
+function tutorRenderTranscript(){
+  var zone = document.getElementById("teacherTranscript");
+  zone.innerHTML = tutorTranscript.map(function(t){
+    return "<p>" + t.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</p>";
+  }).join("");
+}
+
+function tutorPlayCurrent(){
+  var beat = TUTOR_LESSON[tutorIdx];
+  $tutorAudio.pause();
+  $tutorAudio.src = beat.audio;
+  $tutorAudio.play().catch(function(){});
+}
+
+function tutorRenderBeat(){
+  var beat = TUTOR_LESSON[tutorIdx];
+  document.getElementById("teacherVisual").innerHTML = beat.visual || "";
+  tutorTranscript.push(beat.text);
+  tutorRenderTranscript();
+  if (window.AoiHost) window.AoiHost.say(beat.text, {pose: beat.pose || null, eyes: beat.eyes || null});
+  tutorPlayCurrent();
+  var nextBtn = document.getElementById("teacherBeatNext");
+  nextBtn.hidden = false;
+  nextBtn.textContent = (tutorIdx + 1 < TUTOR_LESSON.length) ? "Continue" : "Done";
+}
+
+document.getElementById("teacherBeatNext").addEventListener("click", function(){
+  if (tutorIdx + 1 < TUTOR_LESSON.length){ tutorIdx++; tutorRenderBeat(); }
+  else { renderTeacherPicker(); showView("teacher", {backTo:"hub"}); }
+});
+document.getElementById("teacherReplayBtn").addEventListener("click", tutorPlayCurrent);
+
+function renderTeacherLesson(){
+  setHeader("Claude Code on Your Phone", "Teacher");
+  tutorIdx = 0;
+  tutorTranscript = [];
+  tutorRenderBeat();
+}
+function renderTeacherPicker(){
+  setHeader("Learn with Aoi", "Teacher");
+}
+document.getElementById("teacherCardClaudeCode").addEventListener("click", function(){
+  renderTeacherLesson();
+  showView("teacherLesson", {backTo:"teacher"});
+});
 
 /* ---------- hint: reuses the existing BYOK chat/LLM system (window.AoiChat, defined in the chat
    module below) to ask for a nudge toward the current question, never the answer itself. Does not
@@ -2774,7 +3054,7 @@ requestAnimationFrame(function(t){ last = t; frame(t); });
 /* ---------- coaching lines, tied into the quiz engine's existing think()/react()/celebrate() hooks ---------- */
 var HUB_LINES = ["Teacher, Quiz, Singing, Cooking, or just a chat \u2014 pick a mode.", "Ready when you are. Where should we start?"];
 var QUIZSELECT_LINES = ["PPL or General Knowledge \u2014 your call.", "Pick a subject and let's drill."];
-var TEACHER_LINES = ["I don't have a narrated lesson built here yet \u2014 try Quiz or Singing for now."];
+var TEACHER_LINES = ["I've got one real lesson ready \u2014 Claude Code on your phone. Tap in and I'll walk you through it."];
 var SUBJECT_LINES = ["Pick a category to drill, or jump into a full session.", "Pick a topic \u2014 we'll go one question at a time."];
 var THINK_LINES = ["Take your time \u2014 read every choice before you pick.", "No rush, I'm right here if you get stuck.", "Think it through \u2014 you've got this."];
 var COOKING_LINES = ["Browse a recipe, or tap one and I'll talk you through it.", "What are we making today?"];
@@ -2795,8 +3075,9 @@ window.AoiHost = {
     else if (name === 'daily') say(pick(DAILY_LINES), { pose: 'present_r', eyes: 'eyes_happy' });
     else if (name === 'sales') say(pick(SALES_LINES), { pose: 'point_r', eyes: 'eyes_think' });
     else if (name === 'salesDetail') say(pick(SALES_DETAIL_LINES), { pose: 'present_l', eyes: 'eyes_think' });
-    /* japanese: renderJapanese()'s own jpRenderBeat() drives her line directly (paced lesson beats);
-       quiz and results are driven by think()/react()/celebrate() below, at their own specific moments */
+    /* japanese and teacherLesson: their own jpRenderBeat()/tutorRenderBeat() drive her line directly
+       (paced lesson beats); quiz and results are driven by think()/react()/celebrate() below, at
+       their own specific moments */
   },
   think: function(){
     say(pick(THINK_LINES), { pose: null, eyes: 'eyes_think' });
@@ -3021,6 +3302,7 @@ var $panel = document.getElementById('chatPanel');
 var $settings = document.getElementById('settingsPanel');
 var $jpTranscriptPanel = document.getElementById('jpTranscriptPanel');
 var $daytripTranscriptPanel = document.getElementById('daytripTranscriptPanel');
+var $teacherTranscriptPanel = document.getElementById('teacherTranscriptPanel');
 var $backdrop = document.getElementById('overlayBackdrop');
 var $msgs = document.getElementById('chatMsgs');
 var $noKey = document.getElementById('chatNoKey');
@@ -3042,12 +3324,15 @@ function renderHistory(){
 }
 var $panelTitle = document.querySelector('#chatPanel .panelTitle');
 var $saveJournalBtn = document.getElementById('chatSaveJournalBtn');
-function closeAllOverlays(){ $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $daytripTranscriptPanel.hidden = true; $backdrop.hidden = true; }
+function closeAllOverlays(){ $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $daytripTranscriptPanel.hidden = true; $teacherTranscriptPanel.hidden = true; $backdrop.hidden = true; }
 function openJpTranscript(){
-  $jpTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $daytripTranscriptPanel.hidden = true; $backdrop.hidden = false;
+  $jpTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $daytripTranscriptPanel.hidden = true; $teacherTranscriptPanel.hidden = true; $backdrop.hidden = false;
 }
 function openDaytripTranscript(){
-  $daytripTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $backdrop.hidden = false;
+  $daytripTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $teacherTranscriptPanel.hidden = true; $backdrop.hidden = false;
+}
+function openTeacherTranscript(){
+  $teacherTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $daytripTranscriptPanel.hidden = true; $backdrop.hidden = false;
 }
 function openChat(context){
   currentContext = context || 'study';
@@ -3102,6 +3387,8 @@ $vowelAudio.addEventListener('ended', function(){
 });
 document.getElementById('daytripTranscriptCloseBtn').addEventListener('click', closeAllOverlays);
 document.getElementById('daytripTranscriptBtn').addEventListener('click', openDaytripTranscript);
+document.getElementById('teacherTranscriptCloseBtn').addEventListener('click', closeAllOverlays);
+document.getElementById('teacherTranscriptBtn').addEventListener('click', openTeacherTranscript);
 document.getElementById('chatSettingsBtn').addEventListener('click', openSettings);
 document.getElementById('chatOpenSettingsBtn').addEventListener('click', openSettings);
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
