@@ -39,7 +39,7 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .wrap{max-width:920px; margin:0 auto; display:flex; flex-direction:column; gap:22px;}
 .topbar{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;}
 .brand{display:flex; flex-direction:column; gap:2px;}
-.brand .kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2);}
+.tag{display:inline-block; vertical-align:middle; margin-left:7px; font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-fg); background:var(--accent); padding:3px 8px; border-radius:999px;}
 .brand h1{font-size:13px; line-height:1.45; letter-spacing:0;}
 .topbtns{display:flex; gap:8px; flex-wrap:wrap;}
 .themebtn,.navbtn{border:1px solid var(--line); background:var(--surface); color:var(--fg); border-radius:999px; padding:7px 14px; font-family:var(--font-mono); font-size:12px; cursor:pointer; white-space:nowrap;}
@@ -88,8 +88,8 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .progressline .track > i{display:block; height:100%; background:var(--accent);}
 .qcat{font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-2);}
 .qtext{font-size:clamp(17px,2.6vw,21px); line-height:1.4;}
-.choices{display:flex; flex-direction:column; gap:10px;}
-.choice{text-align:left; background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; font-size:15px; cursor:pointer; display:flex; gap:10px; align-items:flex-start; min-width:0; font-family:inherit; color:inherit;}
+.choices{display:flex; flex-direction:column; gap:6px;}
+.choice{text-align:left; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:13.5px; line-height:1.3; cursor:pointer; display:flex; gap:9px; align-items:flex-start; min-width:0; font-family:inherit; color:inherit;}
 .choice .k{font-family:var(--font-mono); color:var(--muted); flex:none;}
 .choice:hover{border-color:var(--accent);}
 .choice.correct{background:var(--good-bg); border-color:var(--good);}
@@ -117,9 +117,13 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .jp-section ul{margin:0; padding-left:18px; line-height:1.55; font-size:13px;}
 .jp-note{background:var(--surface-2); border-left:3px solid var(--accent); border-radius:8px; padding:9px 11px; font-size:12px; color:var(--fg);}
 .vowelrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(74px,1fr)); gap:6px;}
-.vowelchip{background:var(--surface-2); border-radius:10px; padding:7px; text-align:center;}
+.vowelchip{background:var(--surface-2); border-radius:10px; padding:7px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:2px;}
 .vowelchip .kana{font-family:var(--font-display); font-size:18px;}
 .vowelchip .ipa{font-family:var(--font-mono); font-size:10.5px; color:var(--accent-2);}
+.vowelPlay{width:26px; height:26px; border-radius:999px; border:1px solid var(--line); background:var(--surface);
+  color:var(--accent); display:grid; place-items:center; cursor:pointer; padding:0; font-size:10px; margin-bottom:1px;}
+.vowelPlay:active{transform:scale(.92);}
+.vowelPlay.playing{background:var(--accent); color:var(--accent-fg); border-color:transparent;}
 .drill{display:flex; align-items:flex-start; gap:8px; padding:7px 0; border-top:1px solid var(--line);}
 .drill:first-of-type{border-top:none;}
 .drill input{margin-top:3px;}
@@ -130,10 +134,14 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 /* ---------- Japanese lesson: Aoi-paced beats + immediate checks + a transcript, instead of a
    static reference wall shown all at once ---------- */
 .jpLesson{display:flex; flex-direction:column; gap:10px;}
-.jpDisclaimer{margin:0 0 2px;}
-details.jpTranscriptWrap, details.jpRefWrap{border-top:1px solid var(--line); padding-top:8px; margin-top:4px;}
-details.jpTranscriptWrap summary, details.jpRefWrap summary{cursor:pointer; font-family:var(--font-mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-2); padding:2px 0;}
-.jpTranscriptLog{display:flex; flex-direction:column; gap:6px; padding-top:8px;}
+.jpTopline{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+.jpDisclaimer{margin:0;}
+details.jpRefWrap{border-top:1px solid var(--line); padding-top:8px; margin-top:4px;}
+details.jpRefWrap summary{cursor:pointer; font-family:var(--font-mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-2); padding:2px 0;}
+/* Transcript moved off the main reading flow into its own side panel (reuses the chat/settings
+   overlayPanel pattern) -- per direct request, it's optional reference material, not something
+   that should reserve a row in the primary lesson view even collapsed. */
+.jpTranscriptLog{display:flex; flex-direction:column; gap:6px; padding:14px 16px; overflow-y:auto;}
 .jpTranscriptLog p{margin:0; font-size:12.5px; line-height:1.5; color:var(--muted);}
 .jpRefWrap > .jp-section{margin-top:8px;}
 .takecard .takehead{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
@@ -198,8 +206,8 @@ body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
    sticky-math entirely: #aoiCorner then always sits right after it, never covering it. On a
    short view #cardZone is simply shorter than this cap and never scrolls, so no dead space is
    reintroduced -- only a genuinely tall view engages the internal scrollbar. */
-#cardZone{padding:2px 0 8px; max-height:calc(100svh - 230px); overflow-y:auto; -webkit-overflow-scrolling:touch;}
-@supports not (height:100svh){ #cardZone{max-height:calc(100vh - 230px);} }
+#cardZone{padding:2px 0 8px; max-height:calc(100svh - var(--host-size) - 136px); overflow-y:auto; -webkit-overflow-scrolling:touch;}
+@supports not (height:100svh){ #cardZone{max-height:calc(100vh - var(--host-size) - 136px);} }
 #card{background:var(--surface); border:1.5px solid var(--line); border-radius:var(--card-radius);
   box-shadow:var(--chrome-shadow); padding:12px;}
 .ctag{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2);margin-bottom:8px;}
@@ -218,8 +226,14 @@ body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
 @keyframes aoiblink{50%{opacity:0;}}
 #hint{position:absolute; top:-8px; right:12px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:1px 7px; font-size:9px; color:var(--muted); letter-spacing:.06em;}
 
+/* Her idle portrait reads at roughly a third of the viewport, per direct request, instead of the
+   small fixed 84px box from the earlier crop fix -- that fix (sizeHost reading the frame's real
+   clientWidth with no snapping) still holds at any size, it just needs the frame itself sized up.
+   #cardZone's max-height above is kept in sync via the same --host-size var, so growing her does
+   not reopen the dead-space bug: the two were tuned together, not independently. */
+:root{ --host-size: min(32vh, 260px); }
 #host{flex:none; display:flex; justify-content:center; padding:6px 0 2px;}
-#host .frame{position:relative; width:84px; height:84px; border-radius:16px; overflow:hidden;
+#host .frame{position:relative; width:var(--host-size); height:var(--host-size); border-radius:16px; overflow:hidden;
   background:radial-gradient(closest-side, rgba(54,160,230,.20), rgba(54,160,230,0));}
 #aoi{display:block; image-rendering:pixelated; image-rendering:-moz-crisp-edges; image-rendering:crisp-edges;}
 
@@ -314,8 +328,7 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
 
   <div id="top">
     <div class="brand">
-      <span class="kicker" id="brandKicker">Hosted by Aoi</span>
-      <h1 id="brandTitle">Aoi Teacher</h1>
+      <h1 id="brandTitle">Aoi Teacher<span class="tag" id="brandTag" hidden></span></h1>
     </div>
     <div class="topbtns">
       <button class="navbtn" id="btnBack" hidden type="button" aria-label="Back">&larr;</button>
@@ -334,32 +347,26 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
       <button class="hubcard" id="hubCardTeacher" type="button">
         <span class="badge" style="align-self:flex-start;">Teacher</span>
         <h3>Learn with Aoi</h3>
-        <p>Narrated, Aoi-led lessons — explained in small beats, with a transcript.</p>
       </button>
       <button class="hubcard" id="hubCardQuiz" type="button">
         <span class="badge" style="align-self:flex-start;">Quiz</span>
         <h3>Test Yourself</h3>
-        <p id="hubQuizSub">PPL Checkride Prep and General Knowledge, with hints and weak-spot tracking.</p>
       </button>
       <button class="hubcard" id="hubCardSinging" type="button">
         <span class="badge" style="align-self:flex-start;">Singing</span>
         <h3>Japanese Pronunciation</h3>
-        <p>Mora-timing, pure vowels, and common pitfalls — explained by Aoi, plus a practice log.</p>
       </button>
       <button class="hubcard" id="hubCardCooking" type="button">
         <span class="badge" style="align-self:flex-start;">Cooking</span>
         <h3>Cook with Aoi</h3>
-        <p>Browse recipes, or have Aoi talk you through one step by step.</p>
       </button>
       <button class="hubcard" id="hubCardDaily" type="button">
         <span class="badge" style="align-self:flex-start;">Daily Chat</span>
         <h3>How's Your Day?</h3>
-        <p>A casual chat with Aoi — not study-related. Save bits to a journal if you want.</p>
       </button>
       <button class="hubcard" id="hubCardDaytrip" type="button">
         <span class="badge" style="align-self:flex-start;">Aoi's Day</span>
         <h3 id="daytripHubTitle">Where Aoi Went Today</h3>
-        <p id="daytripHubSub">A new place or activity every day, with real facts to learn from.</p>
       </button>
     </div>
   </div>
@@ -416,15 +423,14 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
        Japanese lesson, plus a log of past days. Deterministic by date -- same "today" for anyone
        who opens the app on a given date, no server or account needed. -->
   <div id="view-daytrip" hidden>
+    <div class="jpTopline">
+      <span></span>
+      <button class="btn ghost tiny" id="daytripTranscriptBtn" type="button">Transcript</button>
+    </div>
     <div class="jpLesson">
       <div id="daytripChecked" class="explain"></div>
       <button class="btn primary" id="daytripNext" type="button">Continue</button>
     </div>
-
-    <details class="jpTranscriptWrap">
-      <summary>Transcript</summary>
-      <div id="daytripTranscript" class="jpTranscriptLog"></div>
-    </details>
 
     <div class="jp-section">
       <h3>Past trips</h3>
@@ -518,7 +524,10 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
 
   <!-- JAPANESE PRONUNCIATION -->
   <div id="view-japanese" hidden>
-    <p class="hint jpDisclaimer">Reference &amp; practice guide &mdash; no mic access here, so no live listening; record elsewhere and upload a take below to compare.</p>
+    <div class="jpTopline">
+      <p class="hint jpDisclaimer">No mic access here, so no live listening; record elsewhere and upload a take below to compare.</p>
+      <button class="btn ghost tiny" id="jpTranscriptBtn" type="button">Transcript</button>
+    </div>
 
     <div class="jpLesson">
       <div class="choices" id="jpBeatCheck" hidden></div>
@@ -526,23 +535,18 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
       <button class="btn primary" id="jpBeatNext" type="button">Continue</button>
     </div>
 
-    <details class="jpTranscriptWrap">
-      <summary>Transcript</summary>
-      <div id="jpTranscript" class="jpTranscriptLog"></div>
-    </details>
-
     <details class="jpRefWrap">
       <summary>Full reference &amp; practice</summary>
 
       <div class="jp-section">
         <h3>The five pure vowels</h3>
-        <p>Japanese has exactly five vowel sounds, and each one stays pure and unchanging for its full duration &mdash; unlike English vowels, which often glide into a second sound (the English "o" in "go" actually glides toward "oo"). Keeping each Japanese vowel flat and unchanging is one of the single biggest improvements you can make for clear pronunciation in singing.</p>
+        <p>Five vowel sounds, each pure and unchanging &mdash; unlike English, which often glides (the "o" in "go" drifts toward "oo"). Keeping them flat is one of the biggest wins for clear pronunciation. Tap one to hear Aoi say it.</p>
         <div class="vowelrow">
-          <div class="vowelchip"><div class="kana">a</div><div class="ipa">ah, as in "father"</div></div>
-          <div class="vowelchip"><div class="kana">i</div><div class="ipa">ee, as in "see"</div></div>
-          <div class="vowelchip"><div class="kana">u</div><div class="ipa">oo, unrounded lips, as in "food" but flatter</div></div>
-          <div class="vowelchip"><div class="kana">e</div><div class="ipa">eh, as in "bed"</div></div>
-          <div class="vowelchip"><div class="kana">o</div><div class="ipa">oh, as in "go" but held flat, no "w" glide at the end</div></div>
+          <div class="vowelchip"><button class="vowelPlay" type="button" data-src="audio/vowel_a.mp3" aria-label="Play a">&#9654;</button><div class="kana">a</div><div class="ipa">ah, as in "father"</div></div>
+          <div class="vowelchip"><button class="vowelPlay" type="button" data-src="audio/vowel_i.mp3" aria-label="Play i">&#9654;</button><div class="kana">i</div><div class="ipa">ee, as in "see"</div></div>
+          <div class="vowelchip"><button class="vowelPlay" type="button" data-src="audio/vowel_u.mp3" aria-label="Play u">&#9654;</button><div class="kana">u</div><div class="ipa">oo, unrounded lips, as in "food" but flatter</div></div>
+          <div class="vowelchip"><button class="vowelPlay" type="button" data-src="audio/vowel_e.mp3" aria-label="Play e">&#9654;</button><div class="kana">e</div><div class="ipa">eh, as in "bed"</div></div>
+          <div class="vowelchip"><button class="vowelPlay" type="button" data-src="audio/vowel_o.mp3" aria-label="Play o">&#9654;</button><div class="kana">o</div><div class="ipa">oh, as in "go" but held flat, no "w" glide at the end</div></div>
         </div>
       </div>
 
@@ -669,6 +673,27 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
       <p class="hint" id="settingsSavedMsg" hidden>Saved.</p>
     </div>
   </div>
+
+  <div id="jpTranscriptPanel" class="overlayPanel" hidden>
+    <div class="panelHead">
+      <span class="panelTitle">Transcript</span>
+      <div class="panelHeadBtns">
+        <button type="button" id="jpTranscriptCloseBtn" class="navbtn" aria-label="Close transcript">&times;</button>
+      </div>
+    </div>
+    <div id="jpTranscript" class="jpTranscriptLog"></div>
+  </div>
+
+  <div id="daytripTranscriptPanel" class="overlayPanel" hidden>
+    <div class="panelHead">
+      <span class="panelTitle">Transcript</span>
+      <div class="panelHeadBtns">
+        <button type="button" id="daytripTranscriptCloseBtn" class="navbtn" aria-label="Close transcript">&times;</button>
+      </div>
+    </div>
+    <div id="daytripTranscript" class="jpTranscriptLog"></div>
+  </div>
+
   <div id="overlayBackdrop" hidden></div>
 
 </div>
@@ -1571,6 +1596,15 @@ var backTarget = null;
    Pronunciation and Aoi's Day. Add future narrated-lesson views here too. */
 var TEACH_VIEWS = {japanese:1, daytrip:1};
 var wrapEl = document.querySelector(".wrap");
+/* Single header line: title, with an optional small highlighted category tag right after it on
+   the same line, instead of a separate kicker line sitting above the title (ate an extra row of
+   vertical space, and on the hub duplicated "Aoi Explains" twice). Pass tag="" / omit it for the
+   hub, which has no sensible single-word category of its own. */
+function setHeader(title, tag){
+  document.getElementById("brandTitle").firstChild.textContent = title;
+  var t = document.getElementById("brandTag");
+  if (tag){ t.textContent = tag; t.hidden = false; } else { t.hidden = true; }
+}
 function showView(name, opts){
   Object.keys(views).forEach(function(k){ views[k].hidden = (k !== name); });
   var backBtn = document.getElementById("btnBack");
@@ -1592,31 +1626,17 @@ document.getElementById("btnBack").addEventListener("click", function(){
 
 /* ---------- hub (top-level: Teacher / Quiz / Singing) ---------- */
 function renderHub(){
-  document.getElementById("brandKicker").textContent = "Aoi Explains";
-  document.getElementById("brandTitle").textContent = "Aoi Explains";
-
-  var pplAns = loadAnswers(SUBJECTS.ppl);
-  var pplAnswered = 0;
-  SUBJECTS.ppl.questions.forEach(function(q){ if (Object.prototype.hasOwnProperty.call(pplAns, q.id)) pplAnswered++; });
-  var gkAns = loadAnswers(SUBJECTS.gk);
-  var gkAnswered = 0;
-  SUBJECTS.gk.questions.forEach(function(q){ if (Object.prototype.hasOwnProperty.call(gkAns, q.id)) gkAnswered++; });
-  var totalAnswered = pplAnswered + gkAnswered;
-  document.getElementById("hubQuizSub").textContent = totalAnswered
-    ? (totalAnswered + " questions answered so far across PPL Checkride Prep and General Knowledge.")
-    : "PPL Checkride Prep and General Knowledge, with hints and weak-spot tracking.";
+  setHeader("Aoi Explains");
 
   if (window.AoiTrip){
     var dest = window.AoiTrip.today();
     document.getElementById("daytripHubTitle").textContent = dest.place;
-    document.getElementById("daytripHubSub").textContent = dest.kind + " — today's trip. A new one tomorrow.";
   }
 }
 
 /* ---------- quiz select (PPL / GK) ---------- */
 function renderQuizSelect(){
-  document.getElementById("brandKicker").textContent = "Quiz";
-  document.getElementById("brandTitle").textContent = "Pick a Subject";
+  setHeader("Pick a Subject", "Quiz");
 
   var pplAns = loadAnswers(SUBJECTS.ppl);
   var pplTotal = SUBJECTS.ppl.questions.length;
@@ -1670,8 +1690,7 @@ function openSubject(key){
   answers = loadAnswers(activeSubject);
   missCounts = loadMissCounts(activeSubject);
   catPage = 0; roadmapPage = 0;
-  document.getElementById("brandKicker").textContent = activeSubject.key === "ppl" ? "Private Pilot \u00b7 Ground School" : "General Knowledge \u00b7 Study List";
-  document.getElementById("brandTitle").textContent = activeSubject.name;
+  setHeader(activeSubject.name, "Quiz");
   renderSubjectHome();
   showView("subjectHome", {backTo:"quizSelect"});
 }
@@ -2127,8 +2146,7 @@ document.getElementById("jpBeatNext").addEventListener("click", function(){
 });
 
 function renderJapanese(){
-  document.getElementById("brandKicker").textContent = "Japanese";
-  document.getElementById("brandTitle").textContent = "Pronunciation for Singing";
+  setHeader("Pronunciation for Singing", "Singing");
   renderTakes();
   jpRenderPracticeLog();
   jpIdx = 0;
@@ -2209,8 +2227,7 @@ var recipePage = 0;
 var activeRecipe = null;
 
 function renderCookingSelect(){
-  document.getElementById("brandKicker").textContent = "Cooking";
-  document.getElementById("brandTitle").textContent = "Cook with Aoi";
+  setHeader("Cook with Aoi", "Cooking");
   var grid = document.getElementById("recipeGrid");
   var start = wirePager(document.getElementById("recipePager"), document.getElementById("recipePagerLabel"),
     document.getElementById("recipePagerPrev"), document.getElementById("recipePagerNext"),
@@ -2228,8 +2245,7 @@ function openRecipe(id){
   var r = RECIPES.filter(function(x){ return x.id === id; })[0];
   if (!r) return;
   activeRecipe = r;
-  document.getElementById("brandKicker").textContent = "Cooking · " + r.time;
-  document.getElementById("brandTitle").textContent = r.title;
+  setHeader(r.title, "Cooking");
   document.getElementById("recipeTitle").textContent = r.title;
   document.getElementById("recipeBlurb").textContent = r.blurb;
   var ing = document.getElementById("recipeIngredients"); ing.innerHTML = "";
@@ -2256,8 +2272,7 @@ function addJournalEntry(text){
 /* exposed so the chat module (a separate closure) can save an entry without duplicating the journal logic */
 window.AoiJournal = { add: addJournalEntry };
 function renderDaily(){
-  document.getElementById("brandKicker").textContent = "Daily Chat";
-  document.getElementById("brandTitle").textContent = "How's Your Day?";
+  setHeader("How's Your Day?", "Daily Chat");
   var list = document.getElementById("journalList");
   var entries = loadJournal();
   document.getElementById("journalEmpty").hidden = entries.length > 0;
@@ -2465,10 +2480,8 @@ document.getElementById("daytripNext").addEventListener("click", function(){
 });
 function renderDaytrip(){
   var dest = todayDestination();
-  document.getElementById("brandKicker").textContent = "Aoi's Day";
-  document.getElementById("brandTitle").textContent = dest.place;
+  setHeader(dest.place, "Aoi's Day");
   document.getElementById("daytripHubTitle").textContent = dest.place;
-  document.getElementById("daytripHubSub").textContent = dest.kind + " — today's trip. A new one tomorrow.";
   recordTripVisit();
   renderTripLog();
   daytripIdx = 0;
@@ -2848,6 +2861,8 @@ window.AoiChat = {
 var $fab = document.getElementById('chatFab');
 var $panel = document.getElementById('chatPanel');
 var $settings = document.getElementById('settingsPanel');
+var $jpTranscriptPanel = document.getElementById('jpTranscriptPanel');
+var $daytripTranscriptPanel = document.getElementById('daytripTranscriptPanel');
 var $backdrop = document.getElementById('overlayBackdrop');
 var $msgs = document.getElementById('chatMsgs');
 var $noKey = document.getElementById('chatNoKey');
@@ -2869,7 +2884,13 @@ function renderHistory(){
 }
 var $panelTitle = document.querySelector('#chatPanel .panelTitle');
 var $saveJournalBtn = document.getElementById('chatSaveJournalBtn');
-function closeAllOverlays(){ $panel.hidden = true; $settings.hidden = true; $backdrop.hidden = true; }
+function closeAllOverlays(){ $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $daytripTranscriptPanel.hidden = true; $backdrop.hidden = true; }
+function openJpTranscript(){
+  $jpTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $daytripTranscriptPanel.hidden = true; $backdrop.hidden = false;
+}
+function openDaytripTranscript(){
+  $daytripTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $backdrop.hidden = false;
+}
 function openChat(context){
   currentContext = context || 'study';
   if (currentContext !== 'cooking') contextRecipe = null;
@@ -2899,6 +2920,28 @@ $saveJournalBtn.addEventListener('click', function(){
 });
 document.getElementById('chatCloseBtn').addEventListener('click', closeAllOverlays);
 document.getElementById('settingsCloseBtn').addEventListener('click', closeAllOverlays);
+document.getElementById('jpTranscriptCloseBtn').addEventListener('click', closeAllOverlays);
+document.getElementById('jpTranscriptBtn').addEventListener('click', openJpTranscript);
+
+/* Real pronunciation audio for the five vowels -- static clips of Aoi's own voice (Fish Audio,
+   generated offline; see aoi-teacher/audio/), not a live API call, so Fish Audio's lack of
+   browser CORS support (see Settings) doesn't apply here. One shared <audio> element reused for
+   whichever vowel was tapped last, rather than one per button. */
+var $vowelAudio = new Audio();
+document.querySelectorAll('.vowelPlay').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.vowelPlay.playing').forEach(function(b){ b.classList.remove('playing'); });
+    $vowelAudio.pause();
+    $vowelAudio.src = btn.getAttribute('data-src');
+    btn.classList.add('playing');
+    $vowelAudio.play().catch(function(){ btn.classList.remove('playing'); });
+  });
+});
+$vowelAudio.addEventListener('ended', function(){
+  document.querySelectorAll('.vowelPlay.playing').forEach(function(b){ b.classList.remove('playing'); });
+});
+document.getElementById('daytripTranscriptCloseBtn').addEventListener('click', closeAllOverlays);
+document.getElementById('daytripTranscriptBtn').addEventListener('click', openDaytripTranscript);
 document.getElementById('chatSettingsBtn').addEventListener('click', openSettings);
 document.getElementById('chatOpenSettingsBtn').addEventListener('click', openSettings);
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
