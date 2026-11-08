@@ -424,6 +424,7 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     </div>
     <div class="topbtns">
       <button class="navbtn" id="btnBack" hidden type="button" aria-label="Back">&larr;</button>
+      <button class="navbtn" id="lessonPlayBtn" hidden type="button" aria-label="Pause">&#10074;&#10074;</button>
       <button class="themebtn" id="themeToggle" type="button" aria-label="Toggle theme">&#9728;</button>
       <button class="themebtn" id="settingsBtn" type="button" aria-label="Chat settings">&#9881;</button>
     </div>
@@ -492,7 +493,6 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     <div class="jpLesson">
       <div id="teacherVisual"></div>
       <button class="btn ghost tiny" id="teacherReplayBtn" type="button" style="align-self:flex-start;">&#128266; Replay her line</button>
-      <button class="btn primary" id="teacherBeatNext" type="button">Continue</button>
     </div>
   </div>
 
@@ -1766,7 +1766,10 @@ function showView(name, opts){
   if (name === "hub"){ backBtn.hidden = true; }
   else { backBtn.hidden = false; backTarget = (opts && opts.backTo) || "hub"; }
   var dots = document.getElementById("dots");
-  if (name !== "quiz"){ dots.hidden = true; dots.innerHTML = ""; }
+  if (name !== "quiz" && name !== "teacherLesson"){ dots.hidden = true; dots.innerHTML = ""; }
+  var playBtn = document.getElementById("lessonPlayBtn");
+  playBtn.hidden = (name !== "teacherLesson");
+  if (name !== "teacherLesson"){ window.activeLessonAdvance = null; clearLessonTimer(); $tutorAudio.pause(); }
   wrapEl.classList.toggle("teachMode", !!TEACH_VIEWS[name]);
   if (window.AoiHost && window.AoiHost.onView) window.AoiHost.onView(name);
   document.getElementById("cardZone").scrollTop = 0; /* #cardZone scrolls now, not the page */
@@ -1808,7 +1811,7 @@ function renderQuizSelect(){
   document.getElementById("hubGKSub").textContent = gkBuiltCount + " of " + MASTER_TOPICS.length + " topics built so far (" + SUBJECTS.gk.questions.length + " questions) \u2014 " + gkAnswered + " answered.";
 }
 
-document.getElementById("hubCardTeacher").addEventListener("click", function(){ renderTeacherPicker(); showView("teacher", {backTo:"hub"}); });
+document.getElementById("hubCardTeacher").addEventListener("click", startTeacherLesson);
 document.getElementById("hubCardQuiz").addEventListener("click", function(){ renderQuizSelect(); showView("quizSelect", {backTo:"hub"}); });
 document.getElementById("hubCardSinging").addEventListener("click", function(){ renderJapanese(); showView("japanese", {backTo:"hub"}); });
 document.getElementById("hubCardCooking").addEventListener("click", function(){ renderCookingSelect(); showView("cooking", {backTo:"hub"}); });
@@ -2422,6 +2425,80 @@ var tutorIdx = 0;
 var tutorTranscript = [];
 var $tutorAudio = new Audio();
 
+/* ---------- lesson player: autoplay + tap-to-advance, matching the original reference video's
+   actual behavior (play/pause toggle in the header, auto-advance on its own timer, tap the
+   dialogue bubble to skip ahead sooner). activeLessonAdvance is a generic hook the #sub click
+   handler (below, in the say()/renderLine() module) calls when the line is fully shown and not
+   typing -- set by whichever paced-lesson view is currently active, cleared by showView() when
+   leaving it. This pass wires it up for the Teacher lesson only; Japanese/Aoi's Day keep their
+   existing explicit-button pattern since Japanese's beats can include an unanswered inline check
+   that must not be skippable by autoplay. ---------- */
+var lessonPlaying = true;
+var lessonAdvanceTimer = null;
+var teacherEnded = false;
+window.activeLessonAdvance = null; /* read by the #sub click handler in a different <script> tag */
+var TEACHER_CPS = 20, TEACHER_HOLD = 1.2; /* reading-speed fallback if an audio file fails to load/play */
+
+function clearLessonTimer(){ if (lessonAdvanceTimer){ clearTimeout(lessonAdvanceTimer); lessonAdvanceTimer = null; } }
+
+function updateLessonDots(total, idx){
+  var dots = document.getElementById("dots");
+  dots.hidden = false;
+  if (dots.children.length !== total){
+    dots.innerHTML = "";
+    for (var di = 0; di < total; di++){ var seg = document.createElement("span"); seg.innerHTML = "<i></i>"; dots.appendChild(seg); }
+  }
+  Array.prototype.forEach.call(dots.children, function(seg, di){ seg.firstChild.style.width = di < idx ? "100%" : (di === idx ? "40%" : "0"); });
+}
+
+function scheduleTeacherAdvance(textLen){
+  clearLessonTimer();
+  if (!lessonPlaying) return;
+  var ms = (textLen / TEACHER_CPS + TEACHER_HOLD) * 1000 + 4000; /* generous margin beyond her real audio length */
+  lessonAdvanceTimer = setTimeout(function(){ teacherAdvance(); }, ms);
+}
+
+function teacherAdvance(){
+  clearLessonTimer();
+  if (tutorIdx + 1 < TUTOR_LESSON.length){ tutorIdx++; tutorRenderBeat(); }
+  else { teacherFinish(); }
+}
+
+function teacherFinish(){
+  clearLessonTimer();
+  teacherEnded = true;
+  setLessonPlaying(false);
+}
+
+function teacherTapAdvance(){
+  if (teacherEnded){
+    tutorIdx = 0; tutorTranscript = []; teacherEnded = false;
+    setLessonPlaying(true); tutorRenderBeat();
+    return;
+  }
+  teacherAdvance();
+  if (!lessonPlaying) setLessonPlaying(true);
+}
+
+function setLessonPlaying(p){
+  lessonPlaying = p;
+  var btn = document.getElementById("lessonPlayBtn");
+  if (btn){ btn.innerHTML = p ? "&#10074;&#10074;" : "&#9654;"; btn.setAttribute("aria-label", p ? "Pause" : "Play"); }
+  if (p){
+    if ($tutorAudio.src && !$tutorAudio.ended) $tutorAudio.play().catch(function(){});
+    if (!teacherEnded) scheduleTeacherAdvance(TUTOR_LESSON[tutorIdx].text.length);
+  } else {
+    clearLessonTimer();
+    $tutorAudio.pause();
+  }
+}
+
+document.getElementById("lessonPlayBtn").addEventListener("click", function(e){
+  e.stopPropagation();
+  if (teacherEnded){ teacherTapAdvance(); return; }
+  setLessonPlaying(!lessonPlaying);
+});
+
 function tutorRenderTranscript(){
   var zone = document.getElementById("teacherTranscript");
   zone.innerHTML = tutorTranscript.map(function(t){
@@ -2433,7 +2510,8 @@ function tutorPlayCurrent(){
   var beat = TUTOR_LESSON[tutorIdx];
   $tutorAudio.pause();
   $tutorAudio.src = beat.audio;
-  $tutorAudio.play().catch(function(){});
+  $tutorAudio.onended = function(){ if (lessonPlaying) teacherAdvance(); };
+  if (lessonPlaying) $tutorAudio.play().catch(function(){});
 }
 
 function tutorRenderBeat(){
@@ -2443,21 +2521,23 @@ function tutorRenderBeat(){
   tutorRenderTranscript();
   if (window.AoiHost) window.AoiHost.say(beat.text, {pose: beat.pose || null, eyes: beat.eyes || null});
   tutorPlayCurrent();
-  var nextBtn = document.getElementById("teacherBeatNext");
-  nextBtn.hidden = false;
-  nextBtn.textContent = (tutorIdx + 1 < TUTOR_LESSON.length) ? "Continue" : "Done";
+  updateLessonDots(TUTOR_LESSON.length, tutorIdx);
+  scheduleTeacherAdvance(beat.text.length);
+  window.activeLessonAdvance = teacherTapAdvance;
 }
 
-document.getElementById("teacherBeatNext").addEventListener("click", function(){
-  if (tutorIdx + 1 < TUTOR_LESSON.length){ tutorIdx++; tutorRenderBeat(); }
-  else { renderTeacherPicker(); showView("teacher", {backTo:"hub"}); }
+document.getElementById("teacherReplayBtn").addEventListener("click", function(e){
+  e.stopPropagation();
+  tutorPlayCurrent();
+  scheduleTeacherAdvance(TUTOR_LESSON[tutorIdx].text.length);
 });
-document.getElementById("teacherReplayBtn").addEventListener("click", tutorPlayCurrent);
 
 function renderTeacherLesson(){
   setHeader("Claude Code on Your Phone", "Teacher");
   tutorIdx = 0;
   tutorTranscript = [];
+  teacherEnded = false;
+  lessonPlaying = true;
   tutorRenderBeat();
 }
 function renderTeacherPicker(){
@@ -2465,7 +2545,7 @@ function renderTeacherPicker(){
 }
 function startTeacherLesson(){
   renderTeacherLesson();
-  showView("teacherLesson", {backTo:"teacher"});
+  showView("teacherLesson", {backTo:"hub"});
 }
 document.getElementById("teacherCardClaudeCode").addEventListener("click", startTeacherLesson);
 document.getElementById("teacherStartBtn").addEventListener("click", startTeacherLesson);
@@ -3026,6 +3106,7 @@ function say(text, opts){
 }
 document.getElementById('sub').addEventListener('click', function(){
   if (typing){ shownChars = curText.length; typing = false; renderLine(); }
+  else if (window.activeLessonAdvance){ window.activeLessonAdvance(); }
 });
 function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 function mouthFor(text, n){
