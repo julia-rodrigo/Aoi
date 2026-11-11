@@ -347,9 +347,27 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
    fixed rule below), so her caption row, no longer confined to a narrower bordered bubble, can't
    run underneath that independently-fixed button and get covered -- only #sub reserves this, not
    all of #aoiCorner, so her avatar (centered in #host, #sub's sibling) stays centered. */
-#sub{position:relative; display:flex; flex-wrap:wrap; align-items:baseline; column-gap:8px;
+/* --sub-reserve (set by reserveSubFor() in the script below, per paced-lesson view) pins #sub's
+   own box to a constant height for the duration of that view, instead of letting it grow/shrink
+   beat to beat -- #aoiCorner is a flex column with #host stacked above #sub and the WHOLE column
+   anchored by its bottom edge (sticky for most views, position:fixed for the Teacher lesson), so
+   when #sub's real rendered height varied by beat (a longer line wrapping to another row), the
+   column's total height changed, and since its BOTTOM stayed pinned, #host (above #sub in the
+   stack) visibly moved up/down to compensate -- confirmed via getBoundingClientRect() across beats
+   and from the user's own recording ("she keeps moving ... when the text box changes sizes").
+   Fixing the anchor math itself (e.g. anchoring #host from the top instead of the whole column
+   from the bottom) would need #sub to grow downward past the visible column with nothing above it
+   shifting, which conflicts with #host needing to render ABOVE #sub -- simplest robust fix instead
+   makes #sub's box always the same height (the real max across that view's own actual beat texts,
+   measured once per view-entry, not guessed), so the column's total height is also constant and
+   #host's position never moves for THAT reason -- only entering a different view changes it, which
+   is an intentional view change, not drift mid-lesson. min-height (not height) so this can never
+   clip text if some later content is unexpectedly longer than the measured max; it just grows once
+   in that rare case instead of being guaranteed stable. Unset (0px) for views that never call
+   reserveSubFor() -- Hub/Quiz/Cooking/Daily Chat/Sales keep today's natural auto-height behavior. */
+#sub{position:relative; display:flex; flex-wrap:wrap; align-items:baseline; align-content:flex-start; column-gap:8px;
   background:transparent; border:none; box-shadow:none; border-radius:0;
-  padding:2px max(72px, calc(72px + env(safe-area-inset-right,0px))) 4px 2px; min-height:0; overflow:visible; cursor:pointer; opacity:.92;}
+  padding:2px max(72px, calc(72px + env(safe-area-inset-right,0px))) 4px 2px; min-height:var(--sub-reserve, 0px); overflow:visible; cursor:pointer; opacity:.92;}
 #who{order:1; background:none; color:var(--accent); font-size:10px; font-weight:700;
   letter-spacing:.08em; text-transform:uppercase; -webkit-font-smoothing:antialiased;}
 #hint{order:2; margin-left:auto; background:none; border:none; padding:0; font-size:9px; color:var(--muted); letter-spacing:.06em;}
@@ -422,7 +440,7 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
     grid-area:corner; position:static; display:flex; flex-direction:column; justify-content:flex-end;
     align-items:stretch; gap:6px; padding-bottom:2px; padding-top:0; margin-top:0; min-height:0;
   }
-  .wrap.teachMode #sub{ margin:0; min-height:0; padding-right:2px; }
+  .wrap.teachMode #sub{ margin:0; min-height:var(--sub-reserve, 0px); padding-right:2px; }
   .wrap.teachMode #hint{ display:none; }
   .wrap.teachMode #host{ padding:0; }
   /* No fixed width/height here on purpose -- #host .frame inherits the global
@@ -1913,7 +1931,7 @@ function showView(name, opts){
      renderJapanese() are called just BEFORE showView() by their hub-card handlers and set this
      themselves; clearing it here only when truly leaving every paced view (not between them)
      keeps that assignment from being immediately wiped out. */
-  if (!TEACH_VIEWS[name]){ window.activeLessonAdvance = null; }
+  if (!TEACH_VIEWS[name]){ window.activeLessonAdvance = null; if (window.AoiHost) window.AoiHost.clearSubReserve(); }
   if (name !== "teacherLesson"){ clearLessonTimer(); $tutorAudio.pause(); }
   wrapEl.classList.toggle("teachMode", !!TEACH_VIEWS[name]);
   /* The Teacher Claude Code lesson gets its own, more robust fixed-viewport positioning for
@@ -2456,6 +2474,7 @@ function renderJapanese(){
   jpRenderPracticeLog();
   jpIdx = 0;
   jpTranscript = [];
+  if (window.AoiHost) window.AoiHost.reserveSub(JP_LESSON.map(function(b){ return b.text; }));
   jpRenderBeat();
 }
 
@@ -2699,6 +2718,9 @@ function renderTeacherLesson(){
   tutorTranscript = [];
   teacherEnded = false;
   lessonPlaying = true;
+  if (window.AoiHost) window.AoiHost.reserveSub(TUTOR_LESSON.map(function(b){ return b.text; }).concat([
+    "That's the whole lesson! Tap me to go through it again, or head back to try something else."
+  ]));
   tutorRenderBeat();
 }
 function renderTeacherPicker(){
@@ -3157,6 +3179,11 @@ function renderDaytrip(){
   renderTripLog();
   daytripIdx = 0;
   daytripTranscript = [];
+  if (window.AoiHost) window.AoiHost.reserveSub(
+    ["Today I went to " + dest.place + " — a " + dest.kind.toLowerCase() + ". " + dest.facts[0]]
+      .concat(dest.facts.slice(1))
+      .concat(["That's today's trip! Come back tomorrow and I'll have gone somewhere new."])
+  );
   daytripRenderBeat();
 }
 
@@ -3319,33 +3346,74 @@ function handleAoiTap(){
   else if (window.activeLessonAdvance){ window.activeLessonAdvance(); }
 }
 
-/* ---------- pinch-to-resize her portrait ----------
-   Earlier version also let a single pointer drag #host to reposition it, sharing one pointer
-   stream with tap-to-advance (a move past 6px turned a tap into a drag). On a real touchscreen,
-   an ordinary tap-to-advance very commonly moves 10-30px between touchstart and touchend (finger
-   roll, a slightly diagonal release) -- nowhere near a deliberate drag gesture, but well past that
-   6px threshold, so normal lesson taps kept getting misread as drags and the resulting x/y offset
-   was persisted to localStorage and applied to #host globally (every view shares one #host), i.e.
-   just tapping her to advance through a few beats was enough to make her drift and eventually
-   overlap #sub's caption below her -- confirmed via getBoundingClientRect() across beats (see this
-   commit's verification notes) and from the user's own screen recording ("she keeps moving
-   around"). Direct request: "we want her to stay in one place". Fix: dragging is removed entirely
-   -- a single pointer can only ever be a tap, regardless of how much it moves, so #host's position
-   never changes. Pinch-to-resize (two pointers) is kept, since it's a deliberate two-finger
-   gesture that can't be confused with a one-finger tap, but only engages when both pointers start
-   on #host itself (not anywhere in #aoiCorner/#sub), and the scale range is tightened (0.7-1.4,
-   was 0.5-2) so a resize can't overflow far enough to reopen the overlap this fix addresses.
-   Applies a CSS transform to #host ALONE, not to #aoiCorner itself -- #aoiCorner's own layout box
-   (what #cardZone's padding reservation measures via updateAoiReserve() above) is unaffected by
-   this transform; the tightened scale range keeps any resulting overflow small. Only `scale` is
-   persisted now (x/y no longer exist as a concept) -- a stale pre-fix localStorage value is read
-   through clampAoiPos()/{x:0,y:0,...} below, so it can never reintroduce an old drifted position. */
-var AOI_POS_KEY = 'aoi_pos_v1';
-function loadAoiScale(){ try{ var raw = localStorage.getItem(AOI_POS_KEY); var p = raw ? JSON.parse(raw) : null; return (p && p.scale) || 1; }catch(e){ return 1; } }
-function saveAoiScale(s){ try{ localStorage.setItem(AOI_POS_KEY, JSON.stringify({x:0,y:0,scale:s})); }catch(e){} }
-var aoiScale = Math.max(0.7, Math.min(1.4, loadAoiScale()));
+/* Measures the tallest #sub would ever need to render across a paced lesson's own real beat
+   texts (at the CURRENT viewport width/theme), via an offscreen clone -- not a guessed constant,
+   so it's exactly right for whatever the actual content is, in any language or font-size change
+   later. Called once per view-entry (renderTeacherLesson/renderJapanese/renderDaytrip below), not
+   per beat, which is what keeps #host stable for the view's whole duration (see the --sub-reserve
+   comment on the #sub CSS rule above) while still never reserving more than the real content needs. */
+function reserveSubFor(texts){
+  var real = document.getElementById('sub');
+  var clone = real.cloneNode(true);
+  clone.style.position = 'fixed'; clone.style.visibility = 'hidden'; clone.style.pointerEvents = 'none';
+  clone.style.left = '0'; clone.style.top = '-9999px'; clone.style.minHeight = '0';
+  clone.style.width = real.getBoundingClientRect().width + 'px';
+  document.body.appendChild(clone);
+  var cLine = clone.querySelector('#line');
+  var max = 0;
+  (texts || []).forEach(function(t){
+    cLine.textContent = t;
+    var h = clone.getBoundingClientRect().height;
+    if (h > max) max = h;
+  });
+  document.body.removeChild(clone);
+  document.documentElement.style.setProperty('--sub-reserve', Math.ceil(max) + 'px');
+}
+function clearSubReserve(){ document.documentElement.style.removeProperty('--sub-reserve'); }
+
+/* ---------- pinch-to-resize and drag-to-reposition her portrait ----------
+   A previous version let a single pointer drag #host to reposition it, sharing one pointer stream
+   with tap-to-advance, using only a 6px move distance to tell a drag from a tap -- but an ordinary
+   tap-to-advance commonly moves 10-30px between touchstart and touchend on a real touchscreen
+   (finger roll, a slightly diagonal release), so normal lesson taps kept getting misread as drags,
+   and the resulting offset (applied to #host globally, since every view shares one #host) made her
+   drift beat to beat ("she keeps moving around"). That round's fix removed dragging entirely --
+   overcorrecting, since the user does want to be able to drag her wherever she likes; the actual
+   bug was the gesture test, not the feature. Fixed properly this time: a move is only treated as a
+   drag once it has BOTH moved past AOI_DRAG_DIST (18px) AND been held for AOI_DRAG_HOLD_MS (180ms)
+   -- a quick tap (released well under 180ms even with 10-30px of jitter) can never cross the hold
+   gate, so it always reaches pointerup as a plain tap, while a deliberate slow drag crosses both
+   gates and repositions her smoothly from then on. (The real, separate cause of automatic drift --
+   her position shifting because #sub's height varies beat to beat -- is fixed independently via
+   --sub-reserve; see reserveSubFor() and the #sub CSS rule above. That fix holds regardless of
+   whether dragging exists, so restoring drag here doesn't reopen it.)
+   Pinch-to-resize (two pointers, gated to starting on #host, scale clamped 0.7-1.4) is unchanged
+   from the previous round. A 2nd finger joining mid-drag cancels the single-pointer drag tracking
+   and hands off to pinch, since a deliberate two-finger gesture always means "resize", not "drag".
+   Both the drag offset and the pinch scale persist to localStorage and apply as one CSS transform
+   on #host ALONE (not #aoiCorner itself, so #cardZone's reserved space, measured off #aoiCorner's
+   own box, is unaffected) -- x/y are clamped to 40% of the viewport on load so even a value saved
+   before this fix (from the old misfiring code) can't place her off-screen or invisible. */
+var AOI_POS_KEY = 'aoi_pos_v2';
+var AOI_DRAG_DIST = 18, AOI_DRAG_HOLD_MS = 180;
+function clampAoiXY(x, y){
+  var maxX = Math.round(innerWidth * 0.4), maxY = Math.round(innerHeight * 0.4);
+  return { x: Math.max(-maxX, Math.min(maxX, x || 0)), y: Math.max(-maxY, Math.min(maxY, y || 0)) };
+}
+function loadAoiPos(){
+  try{
+    var raw = localStorage.getItem(AOI_POS_KEY);
+    var p = raw ? JSON.parse(raw) : null;
+    var scale = Math.max(0.7, Math.min(1.4, (p && p.scale) || 1));
+    var xy = clampAoiXY(p && p.x, p && p.y);
+    return { x: xy.x, y: xy.y, scale: scale };
+  }catch(e){ return {x:0, y:0, scale:1}; }
+}
+function saveAoiPos(){ try{ localStorage.setItem(AOI_POS_KEY, JSON.stringify({x:aoiX, y:aoiY, scale:aoiScale})); }catch(e){} }
+var _aoiInit = loadAoiPos();
+var aoiX = _aoiInit.x, aoiY = _aoiInit.y, aoiScale = _aoiInit.scale;
 var $hostEl = document.getElementById('host');
-function applyAoiPos(){ $hostEl.style.transform = 'scale(' + aoiScale.toFixed(3) + ')'; }
+function applyAoiPos(){ $hostEl.style.transform = 'translate(' + aoiX.toFixed(1) + 'px,' + aoiY.toFixed(1) + 'px) scale(' + aoiScale.toFixed(3) + ')'; }
 applyAoiPos();
 
 /* aoiGestureWasPinch stays true for the whole multi-touch gesture (set the instant a pinch
@@ -3354,6 +3422,7 @@ applyAoiPos();
    tap (by then aoiPointers is back down to 1 and aoiPinch had already been cleared on the first
    finger's lift), which would have fired tap-to-advance at the end of every resize gesture. */
 var aoiPointers = {}, aoiPinch = null, aoiGestureWasPinch = false;
+var aoiDragCandidate = null, aoiDragging = false;
 function aoiPtDist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
 var $aoiCornerEl = document.getElementById('aoiCorner');
 $aoiCornerEl.addEventListener('pointerdown', function(e){
@@ -3364,6 +3433,10 @@ $aoiCornerEl.addEventListener('pointerdown', function(e){
     var pts = ids.map(function(id){ return aoiPointers[id]; });
     aoiPinch = {dist: aoiPtDist(pts[0], pts[1]), scale: aoiScale};
     aoiGestureWasPinch = true;
+    aoiDragCandidate = null; aoiDragging = false; /* a 2nd finger joining hands off from drag to pinch */
+  } else if (ids.length === 1 && e.target.closest && e.target.closest('#host')){
+    aoiDragCandidate = {id:e.pointerId, startX:e.clientX, startY:e.clientY, startTime:Date.now(), baseX:aoiX, baseY:aoiY};
+    aoiDragging = false;
   }
 });
 $aoiCornerEl.addEventListener('pointermove', function(e){
@@ -3374,25 +3447,68 @@ $aoiCornerEl.addEventListener('pointermove', function(e){
     var pts = ids.map(function(id){ return aoiPointers[id]; });
     aoiScale = Math.max(0.7, Math.min(1.4, aoiPinch.scale * (aoiPtDist(pts[0], pts[1]) / aoiPinch.dist)));
     applyAoiPos();
+    return;
+  }
+  if (ids.length === 1 && aoiDragCandidate && e.pointerId === aoiDragCandidate.id){
+    var dx = e.clientX - aoiDragCandidate.startX, dy = e.clientY - aoiDragCandidate.startY;
+    if (!aoiDragging && aoiPtDist({x:0,y:0}, {x:dx,y:dy}) > AOI_DRAG_DIST && (Date.now() - aoiDragCandidate.startTime) > AOI_DRAG_HOLD_MS){
+      aoiDragging = true;
+    }
+    if (aoiDragging){
+      var xy = clampAoiXY(aoiDragCandidate.baseX + dx, aoiDragCandidate.baseY + dy);
+      aoiX = xy.x; aoiY = xy.y;
+      applyAoiPos();
+    }
   }
 });
+/* Double-tap-on-her-face resets position/scale to default. This used to be a separate listener
+   on #hostEl alone, reacting to ANY pointerup there with no idea what gesture it belonged to --
+   which misfired on a genuine pinch: both fingers of a pinch also land on #host, and lifting them
+   within 350ms of each other (completely normal, not a deliberate double-tap) looked identical to
+   a double-tap, instantly resetting the resize the user had just made. Folded into aoiEndPointer
+   instead, which already knows whether this pointerup is ending a pinch or a drag (and bails out of
+   the whole tap-vs-reset question for either, before ever touching aoiLastTap) -- only a gesture
+   that resolves as a genuine plain tap on #host can start or complete a double-tap. */
+var aoiLastTap = 0;
 function aoiEndPointer(e){
   delete aoiPointers[e.pointerId];
   var remaining = Object.keys(aoiPointers).length;
-  if (remaining < 2 && aoiPinch){ saveAoiScale(aoiScale); aoiPinch = null; }
-  if (remaining === 0){
-    if (!aoiGestureWasPinch && !(e.target.closest && e.target.closest('#aoiChoices'))) handleAoiTap();
-    aoiGestureWasPinch = false;
+  if (remaining < 2 && aoiPinch){ saveAoiPos(); aoiPinch = null; }
+  var wasDragging = false;
+  if (aoiDragCandidate && e.pointerId === aoiDragCandidate.id){
+    wasDragging = aoiDragging;
+    if (aoiDragging) saveAoiPos();
+    aoiDragCandidate = null; aoiDragging = false;
   }
+  if (remaining !== 0) return;
+  var wasPinch = aoiGestureWasPinch;
+  aoiGestureWasPinch = false;
+  if (wasPinch || wasDragging) return;
+  if (e.target.closest && e.target.closest('#aoiChoices')) return;
+  var onHost = !!(e.target.closest && e.target.closest('#host'));
+  /* Only an IDLE tap (one that would do nothing anyway -- not currently typing, no active lesson
+     to advance) can start or complete a double-tap-to-reset pair. Tapping through an active
+     lesson fast enough to both finish a line's typing and advance to the next beat (completely
+     normal, fast-forward-through-a-lesson usage) lands well inside the same timing window a real
+     double-tap uses -- without this guard, that ordinary fast-tapping kept wiping out a manual
+     drag mid-lesson, confirmed via getBoundingClientRect() drifting back to the undragged default
+     position on the very next beat in testing. A tap that does real work always breaks the chain
+     (aoiLastTap reset to 0) instead of arming it, so two deliberate lesson-taps in a row can never
+     be misread as a reset, however fast they land. */
+  if (onHost){
+    var now = Date.now();
+    var idleTap = !typing && !window.activeLessonAdvance;
+    if (idleTap && (now - aoiLastTap) < 350){
+      aoiX = 0; aoiY = 0; aoiScale = 1; applyAoiPos(); saveAoiPos();
+      aoiLastTap = 0; /* consumed -- a 3rd quick tap starts a fresh pair, not another instant reset */
+      return;
+    }
+    aoiLastTap = idleTap ? now : 0;
+  }
+  handleAoiTap();
 }
 $aoiCornerEl.addEventListener('pointerup', aoiEndPointer);
 $aoiCornerEl.addEventListener('pointercancel', aoiEndPointer);
-var aoiLastTap = 0;
-$hostEl.addEventListener('pointerup', function(){
-  var now = Date.now();
-  if (now - aoiLastTap < 350){ aoiScale = 1; applyAoiPos(); saveAoiScale(aoiScale); }
-  aoiLastTap = now;
-});
 function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 function mouthFor(text, n){
   if (n >= text.length) return null;
@@ -3434,6 +3550,9 @@ var SALES_DETAIL_LINES = ["Here's what I'd watch for \u2014 then try it yourself
 
 window.AoiHost = {
   say: say, /* exposed so paced lesson content (e.g. the Japanese view) can drive her line directly */
+  reserveSub: reserveSubFor, /* exposed so renderTeacherLesson()/renderJapanese()/renderDaytrip(),
+    which live in a different <script> tag's own IIFE, can set --sub-reserve for their view */
+  clearSubReserve: clearSubReserve,
   onView: function(name){
     if (name === 'hub') say(pick(HUB_LINES), { pose: 'present_r', eyes: null });
     else if (name === 'quizSelect') say(pick(QUIZSELECT_LINES), { pose: 'point_r', eyes: null });
