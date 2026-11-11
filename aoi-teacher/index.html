@@ -3352,7 +3352,9 @@ function handleAoiTap(){
    later. Called once per view-entry (renderTeacherLesson/renderJapanese/renderDaytrip below), not
    per beat, which is what keeps #host stable for the view's whole duration (see the --sub-reserve
    comment on the #sub CSS rule above) while still never reserving more than the real content needs. */
+var lastReserveTexts = null;
 function reserveSubFor(texts){
+  lastReserveTexts = texts;
   var real = document.getElementById('sub');
   var clone = real.cloneNode(true);
   clone.style.position = 'fixed'; clone.style.visibility = 'hidden'; clone.style.pointerEvents = 'none';
@@ -3369,7 +3371,19 @@ function reserveSubFor(texts){
   document.body.removeChild(clone);
   document.documentElement.style.setProperty('--sub-reserve', Math.ceil(max) + 'px');
 }
-function clearSubReserve(){ document.documentElement.style.removeProperty('--sub-reserve'); }
+function clearSubReserve(){ lastReserveTexts = null; document.documentElement.style.removeProperty('--sub-reserve'); }
+/* The measurement above runs against whatever font is active the instant it's called. On a fast/
+   cached connection the custom webfont (Google Fonts, linked in <head>) is already active by then,
+   but on a real device over a real network it commonly isn't yet -- the browser renders the fallback
+   system font first and swaps to the real one a moment later once it finishes downloading, which
+   re-wraps the caption to a different line count/height than what was just measured and reserved,
+   desyncing #sub from --sub-reserve exactly the way a real phone (not a fast local test) would show.
+   Re-running the measurement once the real fonts are confirmed active closes that gap. */
+if (window.document && document.fonts && document.fonts.ready){
+  document.fonts.ready.then(function(){
+    if (lastReserveTexts) reserveSubFor(lastReserveTexts);
+  }).catch(function(){});
+}
 
 /* ---------- pinch-to-resize and drag-to-reposition her portrait ----------
    A previous version let a single pointer drag #host to reposition it, sharing one pointer stream
