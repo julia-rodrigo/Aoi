@@ -17,11 +17,11 @@
   "maskableIconUrl": "https://julia-rodrigo.github.io/aoi/icons/icon-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "/tmp/claude-0/-home-user-Aoi/a061882f-b5cf-5148-babe-e0b9589dc83f/scratchpad/aoi-twa/android.keystore",
+    "path": "./android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1",
-  "appVersionCode": 1,
+  "appVersionName": "2",
+  "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://julia-rodrigo.github.io/aoi/manifest.json",
@@ -43,5 +43,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "1"
+  "appVersion": "2"
 }
