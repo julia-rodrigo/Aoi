@@ -297,7 +297,13 @@ body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
    letting IT scroll internally (the same pattern already used for teachMode) sidesteps the
    sticky-math entirely: #aoiCorner then always sits right after it, never covering it. On a
    short view #cardZone is simply shorter than this cap and never scrolls, so no dead space is
-   reintroduced -- only a genuinely tall view engages the internal scrollbar. */
+   reintroduced -- only a genuinely tall view engages the internal scrollbar.
+   This sticky+calc mechanism stays the global default (Hub/Quiz/Japanese/Aoi's Day/etc. -- it
+   works fine for them and the dead-space bug above was specifically about NOT forcing a fixed
+   viewport height here). The Teacher Claude Code lesson gets a different, more robust mechanism
+   instead (see "body.lessonLocked" below): that lesson's own real-phone testing showed this
+   sticky+hardcoded-136px-guess math drifts out of sync with #sub's real height once a beat's
+   text is long enough to wrap extra lines, clipping her or shifting her position beat to beat. */
 #cardZone{padding:2px 0 8px; max-height:calc(100svh - var(--host-size) - 136px); overflow-y:auto; -webkit-overflow-scrolling:touch;}
 @supports not (height:100svh){ #cardZone{max-height:calc(100vh - var(--host-size) - 136px);} }
 #card{background:var(--surface); border:1.5px solid var(--line); border-radius:var(--card-radius);
@@ -305,12 +311,28 @@ body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
 .ctag{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2);margin-bottom:8px;}
 
 #aoiCorner{position:sticky; bottom:0; z-index:3; background:var(--bg); padding-top:16px; margin-top:-2px;}
+/* ---------- lesson lock: the Teacher Claude Code lesson's own, more robust positioning ----------
+   showView() adds body.lessonLocked only for the teacherLesson view (not Japanese/Aoi's Day --
+   those keep the sticky mechanism above untouched, same scope as the previous round's fix).
+   #aoiCorner becomes a position:fixed overlay anchored straight to the real viewport edge, so her
+   screen spot is correct by construction regardless of any calc() drifting out of sync with a real
+   device's actual available height -- nothing of hers can ever render below the visible viewport,
+   whatever a given beat's text length does to #sub's height. #cardZone's own scroll/max-height is
+   replaced with a bottom padding equal to --aoi-reserve-bottom, measured live off her actual
+   rendered box by updateAoiReserve() in the script below (on resize and on any change to her own
+   size), so the content area's last line always clears her real current footprint. */
+body.lessonLocked #aoiCorner{position:fixed; left:0; right:0; bottom:0; z-index:20; margin:0 auto; max-width:560px;
+  background:var(--bg); padding-top:16px;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-bottom:max(8px, env(safe-area-inset-bottom,0px));}
+body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 170px)); max-height:none; overflow-y:visible;}
 /* #sub's own top margin reserves room for #who's badge (positioned at top:-10px, ~18px tall),
    so #aoiCorner's padding-top above covers the gap down to #card and #sub itself never needs
    to start flush against it -- without this the badge pokes up into whatever content sits
    directly above #aoiCorner (e.g. the hub's card list), since -10px exceeded the old 6px gap. */
 #sub{position:relative; background:var(--surface); border:1.5px solid var(--line); border-radius:14px;
-  padding:10px 12px 11px; min-height:40px; box-shadow:var(--chrome-shadow); cursor:pointer;}
+  padding:10px 12px 11px; min-height:40px; overflow:visible; box-shadow:var(--chrome-shadow); cursor:pointer;}
 #who{position:absolute; top:-10px; left:12px; background:var(--accent); color:var(--accent-fg); font-size:10px; font-weight:700;
   letter-spacing:.08em; padding:2px 9px; border-radius:20px; -webkit-font-smoothing:antialiased;}
 #line{font-size:14px; line-height:1.38; font-weight:600; padding-top:1px;}
@@ -371,6 +393,23 @@ body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
   .wrap.teachMode #hint{ display:none; }
   .wrap.teachMode #host{ padding:0; }
   .wrap.teachMode #host .frame{ width:88px; height:88px; margin:0 auto; }
+
+  /* Teacher lesson only (body.lessonLocked -- see the portrait rules above for why): the grid-cell
+     corner above is still flow-dependent on the grid row actually getting 100svh of real space,
+     which is exactly the kind of real-device-vs-calc() mismatch that caused the portrait bug. Give
+     this lesson's corner the same real-viewport-anchored treatment as its portrait layout instead:
+     a small fixed box pinned to the bottom-right corner, independent of the grid entirely. Japanese
+     Pronunciation and Aoi's Day are untouched -- they keep the grid-cell mechanism above as already
+     shipped and verified last round. */
+  body.lessonLocked .wrap.teachMode{ height:auto; display:block; }
+  body.lessonLocked .wrap.teachMode > #top{ position:sticky; }
+  body.lessonLocked .wrap.teachMode > #cardZone{
+    max-height:none; overflow-y:visible; padding-bottom:8px; padding-right:var(--aoi-reserve-right, 240px);
+  }
+  body.lessonLocked .wrap.teachMode > #aoiCorner{
+    position:fixed; left:auto; right:max(16px, env(safe-area-inset-right,0px)); bottom:max(16px, env(safe-area-inset-bottom,0px));
+    max-width:220px; width:220px; background:transparent; padding:0; margin:0; justify-content:flex-end;
+  }
 }
 /* Safety net for short-landscape phones (an older/smaller device, or a host surface with its own
    extra chrome eating real viewport height) -- same idea as the portrait short-screen net below. */
@@ -1806,8 +1845,12 @@ function showView(name, opts){
   document.getElementById("teacherTranscriptBtn").hidden = (name !== "teacherLesson");
   if (name !== "teacherLesson"){ window.activeLessonAdvance = null; clearLessonTimer(); $tutorAudio.pause(); }
   wrapEl.classList.toggle("teachMode", !!TEACH_VIEWS[name]);
+  /* The Teacher Claude Code lesson gets its own, more robust fixed-viewport positioning for
+     #aoiCorner (see "body.lessonLocked" in the CSS) -- scoped to just this view, not the other
+     TEACH_VIEWS, which keep the sticky/grid mechanism already shipped and verified. */
+  document.body.classList.toggle("lessonLocked", name === "teacherLesson");
   if (window.AoiHost && window.AoiHost.onView) window.AoiHost.onView(name);
-  document.getElementById("cardZone").scrollTop = 0; /* #cardZone scrolls now, not the page */
+  document.getElementById("cardZone").scrollTop = 0; window.scrollTo(0, 0);
 }
 document.getElementById("btnBack").addEventListener("click", function(){
   if (backTarget === "subjectHome" && activeSubject){ renderSubjectHome(); showView("subjectHome", {backTo:"quizSelect"}); }
@@ -3099,6 +3142,23 @@ function sizeHost(){
   cv.style.width = (256 * S / DPR) + 'px'; cv.style.height = (256 * S / DPR) + 'px';
 }
 addEventListener('resize', sizeHost); sizeHost();
+
+/* #cardZone's reserved space for #aoiCorner (see the CSS above #cardZone/#aoiCorner) is measured
+   live off her actual fixed-position box, not guessed -- so it's always exactly right regardless
+   of how tall #sub gets for a given beat's text, the current theme's spacing, or which orientation
+   layout is active. A ResizeObserver re-measures whenever her box's own size changes (new line of
+   text wraps to another row, theme toggle changes padding, etc.); resize/orientationchange cover
+   viewport changes (rotating the phone, the on-screen keyboard, browser chrome show/hide). */
+var $aoiCorner = document.getElementById('aoiCorner');
+function updateAoiReserve(){
+  var r = $aoiCorner.getBoundingClientRect();
+  document.documentElement.style.setProperty('--aoi-reserve-bottom', Math.max(0, Math.ceil(window.innerHeight - r.top)) + 'px');
+  document.documentElement.style.setProperty('--aoi-reserve-right', Math.max(0, Math.ceil(window.innerWidth - r.left)) + 'px');
+}
+if (window.ResizeObserver) new ResizeObserver(updateAoiReserve).observe($aoiCorner);
+addEventListener('resize', updateAoiReserve);
+addEventListener('orientationchange', function(){ setTimeout(updateAoiReserve, 60); });
+updateAoiReserve();
 
 var BLINKABLE = {"null":1, "eyes_wide":1, "eyes_determined":1, "eyes_side":1};
 function drawAoi(f){
