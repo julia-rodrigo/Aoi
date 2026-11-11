@@ -481,19 +481,62 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
 @media (orientation:landscape) and (min-width:640px) and (max-height:420px){
   .wrap.teachMode #line{ font-size:12.5px; }
 }
-/* ---------- short-landscape fix for the OTHER views (Hub/Quiz/Cooking/etc.) ----------
+/* ---------- landscape fix for the OTHER views (Hub/Quiz/Cooking/etc.) ----------
    These views are not .teachMode and get no grid at all in landscape -- just the default
    portrait-style sticky #aoiCorner stretched into a wide-but-short viewport, where --host-size's
-   normal min(32vh,260px) and #cardZone's "minus 136px" budget both assume a tall portrait phone.
-   On a real phone turned sideways (~360-430px of actual height), that leaves hardly any room for
-   #cardZone's content -- confirmed from the user's own screenshot of the Hub's card list cutting
-   off its last card. Shrink her and the reserved budget specifically for this short+landscape
-   shape; .teachMode views are unaffected (they already set their own max-height/host-size via
-   more specific selectors above, which still win). */
-@media (orientation:landscape) and (max-height:500px){
-  :root{ --host-size: min(16vh, 92px); }
-  #cardZone{ max-height:calc(100svh - var(--host-size) - 78px); }
-  @supports not (height:100svh){ #cardZone{ max-height:calc(100vh - var(--host-size) - 78px); } }
+   normal min(32vh,260px) and #cardZone's "minus 136px" budget both assume a tall portrait phone:
+   on a real phone turned sideways (~360-430px of actual height), that formula leaves hardly any
+   room for #cardZone's content (confirmed from the user's own screenshot of the Hub's card list
+   cutting off its last card). An earlier version of this fix shrunk --host-size itself (down to
+   92px) to free up room for #cardZone -- which solved the cramped-list bug, but at the cost of
+   making her render much smaller in landscape than portrait, which the user then separately (and
+   correctly) flagged as wrong ("aoi should be the same size landscape and portrait"). Shrinking
+   her was never necessary: the real fix is to stop SHARING vertical budget between her and
+   #cardZone's flow at all, the same way the Teacher lesson's body.lessonLocked mechanism already
+   solves this (see that rule above) -- #aoiCorner becomes a fixed-position footer, sized by her
+   own real content (full --host-size, same as portrait) via updateAoiReserve() in the script
+   below (already generic, not scoped to lessonLocked), and #cardZone reserves exactly that much
+   bottom padding instead of having its own max-height calc()'d against a guessed constant. This
+   reuses the already-verified lessonLocked mechanism, just applied to every other view too, so her
+   footprint never collides with #cardZone's content, whatever the real device's available height
+   turns out to be -- and she never needs to shrink to make room. .teachMode views are untouched
+   (their own more specific selectors above still win, unaffected by this generic rule). */
+@media (orientation:landscape) and (min-width:640px){
+  /* A fixed-position FOOTER (spanning full width, like portrait's bottom-anchored #aoiCorner) was
+     tried first here and measured directly: at 852x393 it reserved top:54.6 to bottom:393 -- 338px
+     of a 393px-tall viewport -- which covered almost the entire Hub card list behind her opaque
+     background (confirmed by Playwright itself refusing to click a Hub card because #host/#aoiCorner
+     intercepted the pointer). A bottom-spanning footer and a full 260px avatar cannot coexist on a
+     landscape phone's short ~390-430px height, no matter how the budget math is arranged -- there
+     is not enough VERTICAL room, full stop. --host-size's own formula (min(32vh,260px)) compounds
+     this: vh is always the SHORT dimension in landscape, so it never reaches 260px there anyway.
+     The real fix is to stop competing for vertical space at all: give her a side COLUMN (full
+     viewport height, bounded by WIDTH instead, which landscape has plenty of) exactly like the
+     already-proven .teachMode grid above -- and per the user's own earlier explicit instruction
+     ("have her at the right and the options on the left... left taking slightly more space"), on
+     the right. vmax reaches the 260px cap off the now-ample width, same as portrait's vh reaches it
+     off height, so she renders at the same real size in both orientations without starving anyone
+     of room: the content column still gets everything left over (comfortably more than half at
+     these widths), not a shrunk corner. */
+  body:not(.lessonLocked) .wrap:not(.teachMode){
+    max-width:none; width:100%; height:100svh; display:grid;
+    grid-template-columns:1fr minmax(260px, 300px); grid-template-rows:auto 1fr;
+    grid-template-areas:"top top" "card corner"; column-gap:16px;
+  }
+  @supports not (height:100svh){ body:not(.lessonLocked) .wrap:not(.teachMode){ height:100vh; } }
+  body:not(.lessonLocked) .wrap:not(.teachMode) > #top{ grid-area:top; position:static; }
+  body:not(.lessonLocked) .wrap:not(.teachMode) > #dots{ grid-area:top; align-self:end; }
+  body:not(.lessonLocked) .wrap:not(.teachMode) > #cardZone{
+    grid-area:card; min-width:0; min-height:0; max-height:none; overflow-y:auto;
+    -webkit-overflow-scrolling:touch; padding-bottom:12px;
+  }
+  body:not(.lessonLocked) .wrap:not(.teachMode){ --host-size: min(32vmax, 260px); }
+  body:not(.lessonLocked) .wrap:not(.teachMode) > #aoiCorner{
+    grid-area:corner; position:static; display:flex; flex-direction:column;
+    justify-content:center; align-items:stretch; gap:6px; min-height:0;
+    padding-bottom:max(8px, env(safe-area-inset-bottom,0px));
+  }
+  body:not(.lessonLocked) .wrap:not(.teachMode) #host{ padding:0; }
 }
 
 /* ---------- short-screen safety net for portrait teaching mode ----------
