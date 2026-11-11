@@ -95,16 +95,12 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .choice.correct{background:var(--good-bg); border-color:var(--good);}
 .choice.wrong{background:var(--bad-bg); border-color:var(--bad);}
 .choice[disabled]{cursor:default;}
-/* No display:none/block toggle here on purpose -- display isn't animatable, so a className swap
-   that flips display in the same tick as opacity never gets a "before" frame to transition from.
-   Collapsing via max-height+padding+opacity instead (all animatable) means the element's prior
-   collapsed state is already painted before .show is added, so this really fades/expands in
-   rather than popping -- the "being spoken" look her caption used to fake by retyping the same
-   text a second time underneath (see AoiHost.react() above, which no longer does that). */
-.explain{background:var(--surface-2); border-radius:12px; padding:0 16px; font-size:14px; color:var(--fg);
-  max-height:0; opacity:0; overflow:hidden; transform:translateY(4px);
-  transition:opacity .35s ease, max-height .35s ease, padding .35s ease, transform .35s ease;}
-.explain.show{max-height:600px; opacity:1; padding:14px 16px; transform:none;}
+/* A max-height+padding grow animation used to run here ("being spoken" look) but the user found
+   a text box that visibly changes size while you're reading it annoying -- direct request: "it
+   should only stay one size." A plain display:none/block toggle keeps it at one fixed size
+   whenever it's visible, with nothing to grow or shrink. */
+.explain{display:none; background:var(--surface-2); border-radius:12px; padding:14px 16px; font-size:14px; color:var(--fg);}
+.explain.show{display:block;}
 .explain b{color:var(--accent-2);}
 .quizfoot{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
 
@@ -385,7 +381,7 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
    #host is reordered ahead of #sub (DOM order is unchanged, JS doesn't care) so her avatar
    renders above her caption text, per direct request -- "text chunks below her avatar". */
 #aoiCorner{ display:flex; flex-direction:column; gap:2px; touch-action:none; }
-#host{ order:1; cursor:grab; }
+#host{ order:1; cursor:pointer; }
 #sub{ order:2; }
 
 /* ---------- teaching mode: landscape corner-host layout for narrated lesson content ----------
@@ -429,7 +425,13 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
   .wrap.teachMode #sub{ margin:0; min-height:0; padding-right:2px; }
   .wrap.teachMode #hint{ display:none; }
   .wrap.teachMode #host{ padding:0; }
-  .wrap.teachMode #host .frame{ width:88px; height:88px; margin:0 auto; }
+  /* No fixed width/height here on purpose -- #host .frame inherits the global
+     width:var(--host-size) (min(32vh,260px)) same as portrait, per direct request ("aoi is too
+     small in landscape mode she should be the same size as her portrait mode"). --host-size is
+     driven by vh, which only depends on viewport HEIGHT, not orientation, so at a given viewport
+     height she already renders at the same size in both orientations -- she only looked smaller
+     here because of this rule (a hardcoded 88px, later even 64px below) overriding that. */
+  .wrap.teachMode #host .frame{ margin:0 auto; }
 
   /* Teacher lesson only (body.lessonLocked -- see the portrait rules above for why): the grid-cell
      corner above is still flow-dependent on the grid row actually getting 100svh of real space,
@@ -445,13 +447,20 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
   }
   body.lessonLocked .wrap.teachMode > #aoiCorner{
     position:fixed; left:auto; right:max(16px, env(safe-area-inset-right,0px)); bottom:max(16px, env(safe-area-inset-bottom,0px));
-    max-width:220px; width:220px; background:transparent; padding:0; margin:0; justify-content:flex-end;
+    /* Wide enough for --host-size's full 260px cap (a tall/tablet-width landscape window) now that
+       her frame is no longer forced down to a flat 88px -- was 220px, which would have clipped her
+       at that cap. */
+    max-width:280px; width:280px; background:transparent; padding:0; margin:0; justify-content:flex-end;
   }
 }
 /* Safety net for short-landscape phones (an older/smaller device, or a host surface with its own
-   extra chrome eating real viewport height) -- same idea as the portrait short-screen net below. */
+   extra chrome eating real viewport height) -- same idea as the portrait short-screen net below.
+   This used to also force #host .frame down to a flat 64px, but that media query's own 420px
+   threshold covers ordinary phone landscape heights (~393-412px are both under it), so it was
+   firing, and shrinking her well below portrait size, on completely normal phones -- not just the
+   rare short/older device it was meant for. Only the caption text shrinks slightly here now; her
+   size still comes from --host-size (inherited, same as portrait) via the rule above. */
 @media (orientation:landscape) and (min-width:640px) and (max-height:420px){
-  .wrap.teachMode #host .frame{ width:64px; height:64px; }
   .wrap.teachMode #line{ font-size:12.5px; }
 }
 /* ---------- short-landscape fix for the OTHER views (Hub/Quiz/Cooking/etc.) ----------
@@ -3310,43 +3319,51 @@ function handleAoiTap(){
   else if (window.activeLessonAdvance){ window.activeLessonAdvance(); }
 }
 
-/* ---------- pinch-to-resize / drag-to-reposition her portrait ----------
+/* ---------- pinch-to-resize her portrait ----------
+   Earlier version also let a single pointer drag #host to reposition it, sharing one pointer
+   stream with tap-to-advance (a move past 6px turned a tap into a drag). On a real touchscreen,
+   an ordinary tap-to-advance very commonly moves 10-30px between touchstart and touchend (finger
+   roll, a slightly diagonal release) -- nowhere near a deliberate drag gesture, but well past that
+   6px threshold, so normal lesson taps kept getting misread as drags and the resulting x/y offset
+   was persisted to localStorage and applied to #host globally (every view shares one #host), i.e.
+   just tapping her to advance through a few beats was enough to make her drift and eventually
+   overlap #sub's caption below her -- confirmed via getBoundingClientRect() across beats (see this
+   commit's verification notes) and from the user's own screen recording ("she keeps moving
+   around"). Direct request: "we want her to stay in one place". Fix: dragging is removed entirely
+   -- a single pointer can only ever be a tap, regardless of how much it moves, so #host's position
+   never changes. Pinch-to-resize (two pointers) is kept, since it's a deliberate two-finger
+   gesture that can't be confused with a one-finger tap, but only engages when both pointers start
+   on #host itself (not anywhere in #aoiCorner/#sub), and the scale range is tightened (0.7-1.4,
+   was 0.5-2) so a resize can't overflow far enough to reopen the overlap this fix addresses.
    Applies a CSS transform to #host ALONE, not to #aoiCorner itself -- #aoiCorner's own layout box
-   (what #cardZone's padding reservation measures via updateAoiReserve() above) is completely
-   unaffected by this transform, so moving/resizing her here cannot reopen the clipping/dead-space
-   bugs fixed earlier: nothing about her measured footprint changes, only where the image paints.
-   Persisted to localStorage so it's remembered next launch. Tap-to-advance (above) and this share
-   the same pointer stream on #aoiCorner: a single pointer that never moves past a small threshold
-   is a tap; past that threshold it's a drag; a second simultaneous pointer is a pinch (which also
-   cancels any pending tap). #aoiChoices buttons are excluded so they keep working normally. */
+   (what #cardZone's padding reservation measures via updateAoiReserve() above) is unaffected by
+   this transform; the tightened scale range keeps any resulting overflow small. Only `scale` is
+   persisted now (x/y no longer exist as a concept) -- a stale pre-fix localStorage value is read
+   through clampAoiPos()/{x:0,y:0,...} below, so it can never reintroduce an old drifted position. */
 var AOI_POS_KEY = 'aoi_pos_v1';
-function loadAoiPos(){ try{ var raw = localStorage.getItem(AOI_POS_KEY); return raw ? JSON.parse(raw) : {x:0,y:0,scale:1}; }catch(e){ return {x:0,y:0,scale:1}; } }
-function saveAoiPos(p){ try{ localStorage.setItem(AOI_POS_KEY, JSON.stringify(p)); }catch(e){} }
-var aoiPos = loadAoiPos();
+function loadAoiScale(){ try{ var raw = localStorage.getItem(AOI_POS_KEY); var p = raw ? JSON.parse(raw) : null; return (p && p.scale) || 1; }catch(e){ return 1; } }
+function saveAoiScale(s){ try{ localStorage.setItem(AOI_POS_KEY, JSON.stringify({x:0,y:0,scale:s})); }catch(e){} }
+var aoiScale = Math.max(0.7, Math.min(1.4, loadAoiScale()));
 var $hostEl = document.getElementById('host');
-function clampAoiPos(p){
-  return { x: Math.max(-140, Math.min(140, p.x || 0)), y: Math.max(-140, Math.min(140, p.y || 0)),
-    scale: Math.max(0.5, Math.min(2, p.scale || 1)) };
-}
-function applyAoiPos(){
-  aoiPos = clampAoiPos(aoiPos);
-  $hostEl.style.transform = 'translate(' + aoiPos.x.toFixed(1) + 'px,' + aoiPos.y.toFixed(1) + 'px) scale(' + aoiPos.scale.toFixed(3) + ')';
-}
+function applyAoiPos(){ $hostEl.style.transform = 'scale(' + aoiScale.toFixed(3) + ')'; }
 applyAoiPos();
 
-var aoiPointers = {}, aoiDrag = null, aoiPinch = null;
+/* aoiGestureWasPinch stays true for the whole multi-touch gesture (set the instant a pinch
+   starts, only cleared once every pointer has lifted) -- checking aoiPinch's instantaneous
+   nullness at each pointerup independently misidentified a pinch's SECOND finger lift as a plain
+   tap (by then aoiPointers is back down to 1 and aoiPinch had already been cleared on the first
+   finger's lift), which would have fired tap-to-advance at the end of every resize gesture. */
+var aoiPointers = {}, aoiPinch = null, aoiGestureWasPinch = false;
 function aoiPtDist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
 var $aoiCornerEl = document.getElementById('aoiCorner');
 $aoiCornerEl.addEventListener('pointerdown', function(e){
   if (e.target.closest && e.target.closest('#aoiChoices')) return;
   aoiPointers[e.pointerId] = {x:e.clientX, y:e.clientY};
   var ids = Object.keys(aoiPointers);
-  if (ids.length === 1){
-    aoiDrag = {x:e.clientX, y:e.clientY, time:Date.now(), moved:false, startX:aoiPos.x, startY:aoiPos.y};
-  } else if (ids.length === 2){
+  if (ids.length === 2 && e.target.closest && e.target.closest('#host')){
     var pts = ids.map(function(id){ return aoiPointers[id]; });
-    aoiPinch = {dist: aoiPtDist(pts[0], pts[1]), scale: aoiPos.scale};
-    aoiDrag = null;
+    aoiPinch = {dist: aoiPtDist(pts[0], pts[1]), scale: aoiScale};
+    aoiGestureWasPinch = true;
   }
 });
 $aoiCornerEl.addEventListener('pointermove', function(e){
@@ -3355,22 +3372,17 @@ $aoiCornerEl.addEventListener('pointermove', function(e){
   var ids = Object.keys(aoiPointers);
   if (ids.length === 2 && aoiPinch){
     var pts = ids.map(function(id){ return aoiPointers[id]; });
-    aoiPos.scale = aoiPinch.scale * (aoiPtDist(pts[0], pts[1]) / aoiPinch.dist);
+    aoiScale = Math.max(0.7, Math.min(1.4, aoiPinch.scale * (aoiPtDist(pts[0], pts[1]) / aoiPinch.dist)));
     applyAoiPos();
-  } else if (ids.length === 1 && aoiDrag){
-    var dx = e.clientX - aoiDrag.x, dy = e.clientY - aoiDrag.y;
-    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) aoiDrag.moved = true;
-    if (aoiDrag.moved){ aoiPos.x = aoiDrag.startX + dx; aoiPos.y = aoiDrag.startY + dy; applyAoiPos(); }
   }
 });
 function aoiEndPointer(e){
-  var wasTap = aoiDrag && !aoiDrag.moved && Object.keys(aoiPointers).length === 1 && (Date.now() - aoiDrag.time) < 500;
   delete aoiPointers[e.pointerId];
-  if (Object.keys(aoiPointers).length < 2) aoiPinch = null;
-  if (Object.keys(aoiPointers).length === 0){
-    if (wasTap && !(e.target.closest && e.target.closest('#aoiChoices'))) handleAoiTap();
-    else saveAoiPos(aoiPos);
-    aoiDrag = null;
+  var remaining = Object.keys(aoiPointers).length;
+  if (remaining < 2 && aoiPinch){ saveAoiScale(aoiScale); aoiPinch = null; }
+  if (remaining === 0){
+    if (!aoiGestureWasPinch && !(e.target.closest && e.target.closest('#aoiChoices'))) handleAoiTap();
+    aoiGestureWasPinch = false;
   }
 }
 $aoiCornerEl.addEventListener('pointerup', aoiEndPointer);
@@ -3378,7 +3390,7 @@ $aoiCornerEl.addEventListener('pointercancel', aoiEndPointer);
 var aoiLastTap = 0;
 $hostEl.addEventListener('pointerup', function(){
   var now = Date.now();
-  if (now - aoiLastTap < 350){ aoiPos = {x:0,y:0,scale:1}; applyAoiPos(); saveAoiPos(aoiPos); }
+  if (now - aoiLastTap < 350){ aoiScale = 1; applyAoiPos(); saveAoiScale(aoiScale); }
   aoiLastTap = now;
 });
 function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
