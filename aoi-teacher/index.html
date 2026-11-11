@@ -346,9 +346,23 @@ body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
   .wrap.teachMode{
     max-width:min(960px,96vw); display:grid; grid-template-columns:1fr 220px; grid-template-rows:auto 1fr;
     grid-template-areas:"top top" "card corner"; column-gap:16px;
+    /* The grid's "1fr" row only has real leftover space to claim if the grid container itself has
+       a definite height -- without this, .wrap just grows to its content's natural (portrait-sized)
+       height, so "1fr" collapses to min-content instead of the actual remaining viewport height.
+       That was the real landscape bug: #cardZone/#aoiCorner were never getting the ~340px of real
+       vertical room this layout assumes, only ~155px of leftover content height. */
+    height:100svh;
   }
+  @supports not (height:100svh){ .wrap.teachMode{ height:100vh; } }
   .wrap.teachMode > #top{ grid-area:top; position:static; }
-  .wrap.teachMode > #cardZone{ grid-area:card; min-width:0; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  /* Dots has no grid-area of its own, so it was being auto-placed into an implicit extra row
+     after "card"/"corner" instead of sharing the header's row -- eating a sliver of height AND
+     rendering between the two rows rather than under the title. Landscape's corner-host layout
+     doesn't have room for a separate progress row anyway (the original reference video this mode
+     is modeled on never shows a dots bar over a wide frame), so it's simplest to just not show it
+     here; portrait keeps it. */
+  .wrap.teachMode > #dots{ display:none; }
+  .wrap.teachMode > #cardZone{ grid-area:card; min-width:0; min-height:0; max-height:none; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   .wrap.teachMode > #aoiCorner{
     grid-area:corner; position:static; display:flex; flex-direction:column; justify-content:flex-end;
     align-items:stretch; gap:6px; padding-bottom:2px; padding-top:0; margin-top:0; min-height:0;
@@ -357,6 +371,30 @@ body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
   .wrap.teachMode #hint{ display:none; }
   .wrap.teachMode #host{ padding:0; }
   .wrap.teachMode #host .frame{ width:88px; height:88px; margin:0 auto; }
+}
+/* Safety net for short-landscape phones (an older/smaller device, or a host surface with its own
+   extra chrome eating real viewport height) -- same idea as the portrait short-screen net below. */
+@media (orientation:landscape) and (min-width:640px) and (max-height:420px){
+  .wrap.teachMode #host .frame{ width:64px; height:64px; }
+  .wrap.teachMode #sub{ padding:6px 10px 7px; }
+  .wrap.teachMode #line{ font-size:12.5px; }
+}
+
+/* ---------- short-screen safety net for portrait teaching mode ----------
+   Matches the original reference page's own two height breakpoints (it has identical
+   `@media (max-height:700px)` / `@media (max-height:620px)` rules, unscoped, because it has only
+   one view; these do the same job here but scoped to .teachMode so Hub/Quiz are untouched). Only
+   engages on genuinely short viewports (a small/older phone, or a host surface like an in-app
+   preview pane that eats extra chrome) -- at the heights this app already ships at, none of this
+   applies and her portrait/the subtitle bubble are pixel-identical to the normal rules above. */
+@media (max-height:700px){
+  .wrap.teachMode{ --host-size: min(26vh, 222px); }
+  .wrap.teachMode #sub{ min-height:36px; padding:8px 12px 9px; }
+  .wrap.teachMode #line{ font-size:13px; }
+}
+@media (max-height:620px){
+  .wrap.teachMode .mockScene .phone .notch{ display:none; }
+  .wrap.teachMode .ctag{ margin-bottom:5px; }
 }
 
 /* ---------- pixel treatment: flat surfaces, notched corners, no drop shadows ----------
@@ -424,6 +462,8 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     </div>
     <div class="topbtns">
       <button class="navbtn" id="btnBack" hidden type="button" aria-label="Back">&larr;</button>
+      <button class="navbtn" id="teacherReplayBtn" hidden type="button" aria-label="Replay her line">&#128266;</button>
+      <button class="navbtn" id="teacherTranscriptBtn" hidden type="button" aria-label="Transcript">&#128220;</button>
       <button class="navbtn" id="lessonPlayBtn" hidden type="button" aria-label="Pause">&#10074;&#10074;</button>
       <button class="themebtn" id="themeToggle" type="button" aria-label="Toggle theme">&#9728;</button>
       <button class="themebtn" id="settingsBtn" type="button" aria-label="Chat settings">&#9881;</button>
@@ -486,14 +526,7 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
   <!-- TEACHER LESSON: Claude Code on your phone, narrated beat by beat in Japanese (real audio),
        English text on screen -- same paced-lesson pattern as Singing/Aoi's Day. -->
   <div id="view-teacher-lesson" hidden>
-    <div class="jpTopline">
-      <span></span>
-      <button class="btn ghost tiny" id="teacherTranscriptBtn" type="button">Transcript</button>
-    </div>
-    <div class="jpLesson">
-      <div id="teacherVisual"></div>
-      <button class="btn ghost tiny" id="teacherReplayBtn" type="button" style="align-self:flex-start;">&#128266; Replay her line</button>
-    </div>
+    <div id="teacherVisual"></div>
   </div>
 
   <!-- COOKING: recipe library + detail, with an option to have Aoi talk it through -->
@@ -1769,6 +1802,8 @@ function showView(name, opts){
   if (name !== "quiz" && name !== "teacherLesson"){ dots.hidden = true; dots.innerHTML = ""; }
   var playBtn = document.getElementById("lessonPlayBtn");
   playBtn.hidden = (name !== "teacherLesson");
+  document.getElementById("teacherReplayBtn").hidden = (name !== "teacherLesson");
+  document.getElementById("teacherTranscriptBtn").hidden = (name !== "teacherLesson");
   if (name !== "teacherLesson"){ window.activeLessonAdvance = null; clearLessonTimer(); $tutorAudio.pause(); }
   wrapEl.classList.toggle("teachMode", !!TEACH_VIEWS[name]);
   if (window.AoiHost && window.AoiHost.onView) window.AoiHost.onView(name);
