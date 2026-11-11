@@ -95,8 +95,16 @@ h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
 .choice.correct{background:var(--good-bg); border-color:var(--good);}
 .choice.wrong{background:var(--bad-bg); border-color:var(--bad);}
 .choice[disabled]{cursor:default;}
-.explain{background:var(--surface-2); border-radius:12px; padding:14px 16px; font-size:14px; color:var(--fg); display:none;}
-.explain.show{display:block;}
+/* No display:none/block toggle here on purpose -- display isn't animatable, so a className swap
+   that flips display in the same tick as opacity never gets a "before" frame to transition from.
+   Collapsing via max-height+padding+opacity instead (all animatable) means the element's prior
+   collapsed state is already painted before .show is added, so this really fades/expands in
+   rather than popping -- the "being spoken" look her caption used to fake by retyping the same
+   text a second time underneath (see AoiHost.react() above, which no longer does that). */
+.explain{background:var(--surface-2); border-radius:12px; padding:0 16px; font-size:14px; color:var(--fg);
+  max-height:0; opacity:0; overflow:hidden; transform:translateY(4px);
+  transition:opacity .35s ease, max-height .35s ease, padding .35s ease, transform .35s ease;}
+.explain.show{max-height:600px; opacity:1; padding:14px 16px; transform:none;}
 .explain b{color:var(--accent-2);}
 .quizfoot{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
 
@@ -288,6 +296,7 @@ body{ -webkit-tap-highlight-color:transparent; padding-block:0; }
 #dots span{flex:1;height:4px;border-radius:3px;background:var(--line);overflow:hidden;}
 #dots span i{display:block;height:100%;width:0;background:var(--accent-2);transition:width .25s ease;}
 
+/* --------- removed: see AOI_CAPTION_V2 below for the current boxless-caption measurements --------- */
 /* #aoiCorner's on-screen position, once position:sticky engages (any view taller than one
    screen -- true even at scroll-top-zero, not only "once you scroll past her" as earlier
    assumed), is fixed relative to the viewport regardless of padding on #cardZone or #aoiCorner
@@ -327,18 +336,38 @@ body.lessonLocked #aoiCorner{position:fixed; left:0; right:0; bottom:0; z-index:
   padding-right:max(16px, env(safe-area-inset-right,0px));
   padding-bottom:max(8px, env(safe-area-inset-bottom,0px));}
 body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 170px)); max-height:none; overflow-y:visible;}
-/* #sub's own top margin reserves room for #who's badge (positioned at top:-10px, ~18px tall),
-   so #aoiCorner's padding-top above covers the gap down to #card and #sub itself never needs
-   to start flush against it -- without this the badge pokes up into whatever content sits
-   directly above #aoiCorner (e.g. the hub's card list), since -10px exceeded the old 6px gap. */
-#sub{position:relative; background:var(--surface); border:1.5px solid var(--line); border-radius:14px;
-  padding:10px 12px 11px; min-height:40px; overflow:visible; box-shadow:var(--chrome-shadow); cursor:pointer;}
-#who{position:absolute; top:-10px; left:12px; background:var(--accent); color:var(--accent-fg); font-size:10px; font-weight:700;
-  letter-spacing:.08em; padding:2px 9px; border-radius:20px; -webkit-font-smoothing:antialiased;}
-#line{font-size:14px; line-height:1.38; font-weight:600; padding-top:1px;}
+/* ---------- AOI_CAPTION_V2: boxless caption, per direct request ("no more boxes here and
+   there") ----------
+   #sub used to be a bordered/background "chat bubble" card, with #who as an absolutely-
+   positioned pill badge poking up over its top edge. Both are gone: #sub is now a plain,
+   semi-transparent (opacity, not true see-through -- #aoiCorner itself keeps a solid --bg
+   behind it, which is what actually fixed the "badge clipped by content above" bug class, so
+   true transparency would reopen that) subtitle-style caption, laid out as a simple flex row
+   ("AOI" on the left, "tap to skip" on the right, both plain text, no pill/box) followed by her
+   line wrapping full-width beneath -- no absolute positioning left anywhere in here, which is
+   what makes the old "badge pokes into whatever sits above #aoiCorner" bug class structurally
+   impossible now (there is nothing left positioned outside #sub's own normal flow). */
+/* padding-right reserves room for #chatFab (56px, sitting 18px off the real edge -- see its own
+   fixed rule below), so her caption row, no longer confined to a narrower bordered bubble, can't
+   run underneath that independently-fixed button and get covered -- only #sub reserves this, not
+   all of #aoiCorner, so her avatar (centered in #host, #sub's sibling) stays centered. */
+#sub{position:relative; display:flex; flex-wrap:wrap; align-items:baseline; column-gap:8px;
+  background:transparent; border:none; box-shadow:none; border-radius:0;
+  padding:2px max(72px, calc(72px + env(safe-area-inset-right,0px))) 4px 2px; min-height:0; overflow:visible; cursor:pointer; opacity:.92;}
+#who{order:1; background:none; color:var(--accent); font-size:10px; font-weight:700;
+  letter-spacing:.08em; text-transform:uppercase; -webkit-font-smoothing:antialiased;}
+#hint{order:2; margin-left:auto; background:none; border:none; padding:0; font-size:9px; color:var(--muted); letter-spacing:.06em;}
+#line{order:3; flex-basis:100%; font-size:16px; line-height:1.4; font-weight:600; padding-top:1px;}
 #line .caret{display:inline-block;width:2px;height:1em;background:var(--accent-2);vertical-align:-2px;margin-left:2px;animation:aoiblink .8s steps(1) infinite;}
 @keyframes aoiblink{50%{opacity:0;}}
-#hint{position:absolute; top:-8px; right:12px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:1px 7px; font-size:9px; color:var(--muted); letter-spacing:.06em;}
+/* Small inline choices a view can show right under her caption instead of a big button in the
+   content card (e.g. Cooking's "walk me through it?" Yes/Pass, Sales' Start/Skip). Populated by
+   showAoiChoices()/clearAoiChoices() in the script below; empty and not rendered otherwise. */
+#aoiChoices{order:4; flex-basis:100%; display:flex; gap:8px; flex-wrap:wrap; margin-top:2px;}
+#aoiChoices button{font-family:var(--font-body); font-weight:700; font-size:12.5px; padding:6px 14px;
+  border:1.5px solid var(--accent); border-radius:999px; background:transparent; color:var(--accent); cursor:pointer;}
+#aoiChoices button.primary{background:var(--accent); color:var(--accent-fg);}
+#aoiChoices button:active{transform:scale(.95);}
 
 /* Her idle portrait reads at roughly a third of the viewport, per direct request, instead of the
    small fixed 84px box from the earlier crop fix -- that fix (sizeHost reading the frame's real
@@ -352,8 +381,12 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
 #aoi{display:block; image-rendering:pixelated; image-rendering:-moz-crisp-edges; image-rendering:crisp-edges;}
 
 /* #aoiCorner wraps #sub+#host as one sticky-footer unit (see .wrap/#aoiCorner above); "teaching
-   mode" below repositions this same unit into a landscape content frame's corner instead. */
-#aoiCorner{ display:flex; flex-direction:column; gap:6px; }
+   mode" below repositions this same unit into a landscape content frame's corner instead.
+   #host is reordered ahead of #sub (DOM order is unchanged, JS doesn't care) so her avatar
+   renders above her caption text, per direct request -- "text chunks below her avatar". */
+#aoiCorner{ display:flex; flex-direction:column; gap:2px; touch-action:none; }
+#host{ order:1; cursor:grab; }
+#sub{ order:2; }
 
 /* ---------- teaching mode: landscape corner-host layout for narrated lesson content ----------
    Modeled on real frames from Aoi's rendered explainer video: a landscape frame, Aoi small in a
@@ -366,7 +399,11 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
    corner is fixed bottom-right rather than alternating sides per beat, to keep this scoped. */
 @media (orientation:landscape) and (min-width:640px){
   .wrap.teachMode{
-    max-width:min(960px,96vw); display:grid; grid-template-columns:1fr 220px; grid-template-rows:auto 1fr;
+    /* Her corner column is a proportional ~30% share (min 150px) rather than a fixed 220px, so the
+       content side keeps a visibly bigger share of a wide landscape frame too, per direct request
+       ("content taking slight more space then her side") -- card/corner were already left/right in
+       that order, this only tunes the ratio between them. */
+    max-width:min(960px,96vw); display:grid; grid-template-columns:1fr minmax(150px,32%); grid-template-rows:auto 1fr;
     grid-template-areas:"top top" "card corner"; column-gap:16px;
     /* The grid's "1fr" row only has real leftover space to claim if the grid container itself has
        a definite height -- without this, .wrap just grows to its content's natural (portrait-sized)
@@ -389,7 +426,7 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
     grid-area:corner; position:static; display:flex; flex-direction:column; justify-content:flex-end;
     align-items:stretch; gap:6px; padding-bottom:2px; padding-top:0; margin-top:0; min-height:0;
   }
-  .wrap.teachMode #sub{ margin:0; min-height:0; }
+  .wrap.teachMode #sub{ margin:0; min-height:0; padding-right:2px; }
   .wrap.teachMode #hint{ display:none; }
   .wrap.teachMode #host{ padding:0; }
   .wrap.teachMode #host .frame{ width:88px; height:88px; margin:0 auto; }
@@ -415,8 +452,21 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
    extra chrome eating real viewport height) -- same idea as the portrait short-screen net below. */
 @media (orientation:landscape) and (min-width:640px) and (max-height:420px){
   .wrap.teachMode #host .frame{ width:64px; height:64px; }
-  .wrap.teachMode #sub{ padding:6px 10px 7px; }
   .wrap.teachMode #line{ font-size:12.5px; }
+}
+/* ---------- short-landscape fix for the OTHER views (Hub/Quiz/Cooking/etc.) ----------
+   These views are not .teachMode and get no grid at all in landscape -- just the default
+   portrait-style sticky #aoiCorner stretched into a wide-but-short viewport, where --host-size's
+   normal min(32vh,260px) and #cardZone's "minus 136px" budget both assume a tall portrait phone.
+   On a real phone turned sideways (~360-430px of actual height), that leaves hardly any room for
+   #cardZone's content -- confirmed from the user's own screenshot of the Hub's card list cutting
+   off its last card. Shrink her and the reserved budget specifically for this short+landscape
+   shape; .teachMode views are unaffected (they already set their own max-height/host-size via
+   more specific selectors above, which still win). */
+@media (orientation:landscape) and (max-height:500px){
+  :root{ --host-size: min(16vh, 92px); }
+  #cardZone{ max-height:calc(100svh - var(--host-size) - 78px); }
+  @supports not (height:100svh){ #cardZone{ max-height:calc(100vh - var(--host-size) - 78px); } }
 }
 
 /* ---------- short-screen safety net for portrait teaching mode ----------
@@ -428,7 +478,6 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
    applies and her portrait/the subtitle bubble are pixel-identical to the normal rules above. */
 @media (max-height:700px){
   .wrap.teachMode{ --host-size: min(26vh, 222px); }
-  .wrap.teachMode #sub{ min-height:36px; padding:8px 12px 9px; }
   .wrap.teachMode #line{ font-size:13px; }
 }
 @media (max-height:620px){
@@ -448,8 +497,8 @@ body.lessonLocked #cardZone{padding-bottom:calc(8px + var(--aoi-reserve-bottom, 
 body{ font-family:var(--font-mono); -webkit-font-smoothing:none; }
 h1{ font-family:var(--font-pixel); }
 h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
-#card, #sub, .navbtn, .themebtn, .btn, .choice, .hubcard, .quizcard, .card, .stat, .jp-section,
-#host .frame, .takecard, #chatPanel, #chatFab, #settingsPanel{
+#card, .navbtn, .themebtn, .btn, .choice, .hubcard, .quizcard, .card, .stat, .jp-section,
+#host .frame, .takecard, #chatPanel, #chatFab, #settingsPanel, #aoiChoices button{
   border-width:2px; box-shadow:none;
   clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px));
 }
@@ -465,12 +514,21 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
   width:56px; height:56px; border-radius:999px; border:1.5px solid var(--line); background:var(--accent);
   color:var(--accent-fg); font-size:22px; display:grid; place-items:center; cursor:pointer; box-shadow:var(--chrome-shadow);}
 #chatFab:active{transform:scale(.95);}
-#overlayBackdrop{position:fixed; inset:0; background:rgba(5,10,25,.45); z-index:45;}
+/* Both the backdrop and panel animate in via a .open class (see showOverlayPanel()/closeAllOverlays()
+   in the chat script) instead of just toggling the `hidden` attribute -- that used to pop the panel
+   in instantly, with the keyboard then flashing in right after (from the input's focus() call),
+   which read as janky. transform/opacity are both animatable so the slide-up/fade-in actually play;
+   see the CSS comment on .explain above for why a property that isn't (like display) wouldn't. */
+#overlayBackdrop{position:fixed; inset:0; background:rgba(5,10,25,.45); z-index:45;
+  opacity:0; transition:opacity .22s ease;}
+#overlayBackdrop.open{opacity:1;}
 :root[data-theme="dark"] #overlayBackdrop{background:rgba(0,0,0,.6);}
 .overlayPanel{position:fixed; left:0; right:0; bottom:0; z-index:46; margin:0 auto; max-width:560px;
   background:var(--surface); border:1.5px solid var(--line); border-top-left-radius:20px; border-top-right-radius:20px;
   box-shadow:var(--chrome-shadow); display:flex; flex-direction:column; max-height:min(78vh,620px);
-  padding-bottom:env(safe-area-inset-bottom,0px);}
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  transform:translateY(100%); transition:transform .25s cubic-bezier(.2,.8,.3,1);}
+.overlayPanel.open{transform:translateY(0);}
 .panelHead{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px 10px; flex:none; border-bottom:1px solid var(--line);}
 .panelTitle{font-family:var(--font-display); font-weight:700; font-size:16px;}
 .panelHeadBtns{display:flex; gap:6px;}
@@ -582,7 +640,6 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     <div class="jp-section">
       <h3 id="recipeTitle">Recipe</h3>
       <p id="recipeBlurb" class="hint"></p>
-      <button class="btn primary" id="recipeTalkBtn" type="button">Have Aoi talk me through it</button>
     </div>
     <div class="jp-section">
       <h3>Ingredients</h3>
@@ -617,8 +674,8 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
       <button class="btn ghost tiny" id="daytripTranscriptBtn" type="button">Transcript</button>
     </div>
     <div class="jpLesson">
+      <div id="daytripVisual"></div>
       <div id="daytripChecked" class="explain"></div>
-      <button class="btn primary" id="daytripNext" type="button">Continue</button>
     </div>
 
     <div class="jp-section">
@@ -645,7 +702,6 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     <div class="jp-section">
       <h3 id="salesTitle">Scenario</h3>
       <p id="salesSetup" class="hint"></p>
-      <button class="btn primary" id="salesStartBtn" type="button">Start the roleplay</button>
     </div>
     <div class="jp-section">
       <h3>Aoi's technique tips for this one</h3>
@@ -746,7 +802,6 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
     <div class="jpLesson">
       <div class="choices" id="jpBeatCheck" hidden></div>
       <div class="explain" id="jpBeatExplain"></div>
-      <button class="btn primary" id="jpBeatNext" type="button">Continue</button>
     </div>
 
     <details class="jpRefWrap">
@@ -802,7 +857,7 @@ h2,h3{ font-family:var(--font-mono); letter-spacing:.02em; }
   </div></div>
 
   <div id="aoiCorner">
-    <div id="sub"><div id="who">AOI</div><div id="line"></div><div id="hint">tap to skip</div></div>
+    <div id="sub"><div id="who">AOI</div><div id="hint">tap to skip</div><div id="line"></div><div id="aoiChoices"></div></div>
     <div id="host"><div class="frame"><canvas id="aoi"></canvas></div></div>
   </div>
 
@@ -1843,7 +1898,14 @@ function showView(name, opts){
   playBtn.hidden = (name !== "teacherLesson");
   document.getElementById("teacherReplayBtn").hidden = (name !== "teacherLesson");
   document.getElementById("teacherTranscriptBtn").hidden = (name !== "teacherLesson");
-  if (name !== "teacherLesson"){ window.activeLessonAdvance = null; clearLessonTimer(); $tutorAudio.pause(); }
+  /* activeLessonAdvance (tap-to-advance, see handleAoiTap() in the Aoi host script) stays set
+     for ANY paced-lesson view (TEACH_VIEWS), not just the Teacher lesson -- Daytrip and Japanese
+     now use the same tap mechanic instead of their old Continue buttons. renderDaytrip()/
+     renderJapanese() are called just BEFORE showView() by their hub-card handlers and set this
+     themselves; clearing it here only when truly leaving every paced view (not between them)
+     keeps that assignment from being immediately wiped out. */
+  if (!TEACH_VIEWS[name]){ window.activeLessonAdvance = null; }
+  if (name !== "teacherLesson"){ clearLessonTimer(); $tutorAudio.pause(); }
   wrapEl.classList.toggle("teachMode", !!TEACH_VIEWS[name]);
   /* The Teacher Claude Code lesson gets its own, more robust fixed-viewport positioning for
      #aoiCorner (see "body.lessonLocked" in the CSS) -- scoped to just this view, not the other
@@ -2326,11 +2388,17 @@ function jpRenderTranscript(){
   }).join("");
 }
 
+/* Tap-to-advance (see handleAoiTap() in the Aoi host script) replaces the old Continue/Done
+   button. Gated exactly like the button used to be: a beat with an unanswered check leaves
+   activeLessonAdvance null so tapping her can't skip past it -- it's only set once that beat has
+   no check, or after jpAnswerCheck() has run. */
+function jpTapAdvance(){
+  if (jpIdx + 1 < JP_LESSON.length){ jpIdx++; jpRenderBeat(); }
+}
 function jpRenderBeat(){
   var beat = JP_LESSON[jpIdx];
   var checkZone = document.getElementById("jpBeatCheck");
   var explainZone = document.getElementById("jpBeatExplain");
-  var nextBtn = document.getElementById("jpBeatNext");
   checkZone.innerHTML = ""; checkZone.hidden = true;
   explainZone.innerHTML = ""; explainZone.className = "explain";
 
@@ -2340,7 +2408,7 @@ function jpRenderBeat(){
 
   if (beat.check){
     checkZone.hidden = false;
-    nextBtn.hidden = true;
+    window.activeLessonAdvance = null;
     var letters = ["A","B","C"];
     beat.check.choices.forEach(function(choice, i){
       var btn = document.createElement("button");
@@ -2351,9 +2419,7 @@ function jpRenderBeat(){
       checkZone.appendChild(btn);
     });
   } else {
-    nextBtn.hidden = false;
-    nextBtn.disabled = false;
-    nextBtn.textContent = (jpIdx + 1 < JP_LESSON.length) ? "Continue" : "Done";
+    window.activeLessonAdvance = (jpIdx + 1 < JP_LESSON.length) ? jpTapAdvance : null;
   }
 }
 
@@ -2372,17 +2438,8 @@ function jpAnswerCheck(i, btnEl){
   if (window.AoiHost) window.AoiHost.react(correct, beat.check.explain);
   jpTranscript.push((correct ? "Correct! " : "Not quite. ") + beat.check.explain);
   jpRenderTranscript();
-
-  var nextBtn = document.getElementById("jpBeatNext");
-  nextBtn.hidden = false;
-  nextBtn.disabled = false;
-  nextBtn.textContent = (jpIdx + 1 < JP_LESSON.length) ? "Continue" : "Done";
+  window.activeLessonAdvance = (jpIdx + 1 < JP_LESSON.length) ? jpTapAdvance : null;
 }
-
-document.getElementById("jpBeatNext").addEventListener("click", function(){
-  if (jpIdx + 1 < JP_LESSON.length){ jpIdx++; jpRenderBeat(); }
-  else { document.getElementById("jpBeatNext").hidden = true; }
-});
 
 function renderJapanese(){
   setHeader("Pronunciation for Singing", "Singing");
@@ -2401,7 +2458,9 @@ var MOCK_ICONS = {
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg>',
   repo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v16H7.5A2.5 2.5 0 0 0 5 20.5z"/><path d="M5 20.5A2.5 2.5 0 0 0 7.5 23H19v-5"/></svg>',
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>',
-  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7.58 7-12.5A7 7 0 0 0 5 9.5C5 14.42 12 22 12 22z"/><circle cx="12" cy="9.5" r="2.4"/></svg>',
+  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg>'
 };
 var MOCK_ICON_SM = function(name, size){ return MOCK_ICONS[name].replace('<svg', '<svg width="' + size + '" height="' + size + '"'); };
 
@@ -2546,6 +2605,16 @@ function teacherFinish(){
   clearLessonTimer();
   teacherEnded = true;
   setLessonPlaying(false);
+  updateLessonDots(TUTOR_LESSON.length, TUTOR_LESSON.length);
+  document.getElementById("teacherVisual").innerHTML =
+    '<div class="jp-section" style="text-align:center;">' +
+      '<h3>Lesson complete</h3>' +
+      '<p class="hint">That\'s everything for this one. Tap her to go through it again, or head back and pick something else.</p>' +
+      '<button class="btn primary" id="teacherBackToHubBtn" type="button">Back to Hub</button>' +
+    '</div>';
+  var hubBtn = document.getElementById("teacherBackToHubBtn");
+  if (hubBtn) hubBtn.addEventListener("click", function(e){ e.stopPropagation(); renderHub(); showView("hub"); });
+  if (window.AoiHost) window.AoiHost.say("That's the whole lesson! Tap me to go through it again, or head back to try something else.", {pose:"present_r", eyes:"eyes_happy"});
 }
 
 function teacherTapAdvance(){
@@ -2554,8 +2623,13 @@ function teacherTapAdvance(){
     setLessonPlaying(true); tutorRenderBeat();
     return;
   }
+  var wasPlaying = lessonPlaying;
   teacherAdvance();
-  if (!lessonPlaying) setLessonPlaying(true);
+  /* teacherAdvance() may itself call teacherFinish() (the last beat), which already sets the
+     paused/ended state via setLessonPlaying(false) -- don't immediately flip that back to
+     "playing" afterward just because it had been paused before the tap, or the header's play
+     button is left showing "Pause" on the end screen even though nothing is playing. */
+  if (!teacherEnded && !wasPlaying) setLessonPlaying(true);
 }
 
 function setLessonPlaying(p){
@@ -2727,10 +2801,11 @@ function openRecipe(id){
   var steps = document.getElementById("recipeSteps"); steps.innerHTML = "";
   r.steps.forEach(function(s){ var li = document.createElement("li"); li.textContent = s; steps.appendChild(li); });
   showView("recipe", {backTo:"cooking"});
+  if (window.AoiChoices) window.AoiChoices.show([
+    {label:"Yes", primary:true, onClick:function(){ if (window.AoiChat && window.AoiChat.openCooking) window.AoiChat.openCooking(activeRecipe); }},
+    {label:"Pass", onClick:function(){ window.AoiChoices.clear(); }}
+  ]);
 }
-document.getElementById("recipeTalkBtn").addEventListener("click", function(){
-  if (window.AoiChat && window.AoiChat.openCooking) window.AoiChat.openCooking(activeRecipe);
-});
 
 /* ---------- sales practice: a curated set of realistic objection scenarios. Each has Aoi's own
    coaching tips (static, always available, no API key needed -- this is "Aoi shows you how it
@@ -2828,10 +2903,11 @@ function openScenario(id){
   var tips = document.getElementById("salesTips"); tips.innerHTML = "";
   s.tips.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; tips.appendChild(li); });
   showView("salesDetail", {backTo:"sales"});
+  if (window.AoiChoices) window.AoiChoices.show([
+    {label:"Start", primary:true, onClick:function(){ if (window.AoiChat && window.AoiChat.openSales) window.AoiChat.openSales(activeScenario); }},
+    {label:"Skip", onClick:function(){ window.AoiChoices.clear(); }}
+  ]);
 }
-document.getElementById("salesStartBtn").addEventListener("click", function(){
-  if (window.AoiChat && window.AoiChat.openSales) window.AoiChat.openSales(activeScenario);
-});
 
 /* ---------- daily chat: a casual, non-study space, with an optional local journal ---------- */
 var JOURNAL_KEY = "aoi_journal_v1";
@@ -3029,15 +3105,32 @@ function daytripRenderTranscript(){
     return "<p>" + t.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</p>";
   }).join("");
 }
+/* Small pixel-art "postcard" mock per beat -- same mockScene/MOCK_ICONS visual language as the
+   Teacher Claude Code lesson, so a trip beat reads as an illustrated scene instead of bare text. */
+function daytripVisual(dest){
+  return '<div class="mockScene"><div class="phone"><div class="notch"></div>' +
+    '<div class="gh" style="text-align:center;">' +
+      '<div style="display:flex; justify-content:center; margin-bottom:6px; color:var(--accent-2);">' + MOCK_ICON_SM('pin', 32) + '</div>' +
+      '<h3>' + dest.place + '</h3>' +
+      '<p class="s">' + dest.kind + '</p>' +
+    '</div>' +
+    '<div class="chips" style="justify-content:center;"><span class="chip cy">' + MOCK_ICON_SM('globe', 14) + ' Aoi\'s Day</span></div>' +
+  '</div></div>';
+}
+function daytripTapAdvance(){
+  var dest = todayDestination();
+  if (daytripIdx < dest.facts.length){ daytripIdx++; daytripRenderBeat(); }
+}
 function daytripRenderBeat(){
   var dest = todayDestination();
-  var nextBtn = document.getElementById("daytripNext");
   var checked = document.getElementById("daytripChecked");
   checked.className = "explain"; checked.innerHTML = "";
+  document.getElementById("daytripVisual").innerHTML = daytripVisual(dest);
   var text;
+  var atEnd = daytripIdx >= dest.facts.length;
   if (daytripIdx === 0){
     text = "Today I went to " + dest.place + " — a " + dest.kind.toLowerCase() + ". " + dest.facts[0];
-  } else if (daytripIdx < dest.facts.length){
+  } else if (!atEnd){
     text = dest.facts[daytripIdx];
   } else {
     text = "That's today's trip! Come back tomorrow and I'll have gone somewhere new.";
@@ -3045,14 +3138,8 @@ function daytripRenderBeat(){
   daytripTranscript.push(text);
   daytripRenderTranscript();
   if (window.AoiHost) window.AoiHost.say(text, {pose: (daytripIdx % 2 === 0) ? "present_r" : "point_r", eyes: null});
-  var atEnd = daytripIdx >= dest.facts.length;
-  nextBtn.hidden = atEnd;
-  nextBtn.textContent = (daytripIdx + 1 < dest.facts.length) ? "Continue" : "Continue";
+  window.activeLessonAdvance = atEnd ? null : daytripTapAdvance;
 }
-document.getElementById("daytripNext").addEventListener("click", function(){
-  daytripIdx++;
-  daytripRenderBeat();
-});
 function renderDaytrip(){
   var dest = todayDestination();
   setHeader(dest.place, "Aoi's Day");
@@ -3198,10 +3285,101 @@ function say(text, opts){
   if ('pose' in opts) curPose = opts.pose;
   if ('eyes' in opts) curEyes = opts.eyes;
   renderLine();
+  clearAoiChoices();
 }
-document.getElementById('sub').addEventListener('click', function(){
+/* Small inline choices right under her caption (see #aoiChoices CSS), replacing a big primary
+   button living in the content card -- used by Cooking's "walk me through it?" and Sales'
+   "start the roleplay?". `choices` is [{label, primary, onClick}]. Cleared automatically on the
+   next say() (a new line replaces any choices tied to the previous one) and on view changes. */
+function showAoiChoices(choices){
+  var zone = document.getElementById('aoiChoices');
+  zone.innerHTML = '';
+  choices.forEach(function(c){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    if (c.primary) btn.className = 'primary';
+    btn.textContent = c.label;
+    btn.addEventListener('click', function(e){ e.stopPropagation(); c.onClick(); });
+    zone.appendChild(btn);
+  });
+}
+function clearAoiChoices(){ document.getElementById('aoiChoices').innerHTML = ''; }
+window.AoiChoices = { show: showAoiChoices, clear: clearAoiChoices };
+function handleAoiTap(){
   if (typing){ shownChars = curText.length; typing = false; renderLine(); }
   else if (window.activeLessonAdvance){ window.activeLessonAdvance(); }
+}
+
+/* ---------- pinch-to-resize / drag-to-reposition her portrait ----------
+   Applies a CSS transform to #host ALONE, not to #aoiCorner itself -- #aoiCorner's own layout box
+   (what #cardZone's padding reservation measures via updateAoiReserve() above) is completely
+   unaffected by this transform, so moving/resizing her here cannot reopen the clipping/dead-space
+   bugs fixed earlier: nothing about her measured footprint changes, only where the image paints.
+   Persisted to localStorage so it's remembered next launch. Tap-to-advance (above) and this share
+   the same pointer stream on #aoiCorner: a single pointer that never moves past a small threshold
+   is a tap; past that threshold it's a drag; a second simultaneous pointer is a pinch (which also
+   cancels any pending tap). #aoiChoices buttons are excluded so they keep working normally. */
+var AOI_POS_KEY = 'aoi_pos_v1';
+function loadAoiPos(){ try{ var raw = localStorage.getItem(AOI_POS_KEY); return raw ? JSON.parse(raw) : {x:0,y:0,scale:1}; }catch(e){ return {x:0,y:0,scale:1}; } }
+function saveAoiPos(p){ try{ localStorage.setItem(AOI_POS_KEY, JSON.stringify(p)); }catch(e){} }
+var aoiPos = loadAoiPos();
+var $hostEl = document.getElementById('host');
+function clampAoiPos(p){
+  return { x: Math.max(-140, Math.min(140, p.x || 0)), y: Math.max(-140, Math.min(140, p.y || 0)),
+    scale: Math.max(0.5, Math.min(2, p.scale || 1)) };
+}
+function applyAoiPos(){
+  aoiPos = clampAoiPos(aoiPos);
+  $hostEl.style.transform = 'translate(' + aoiPos.x.toFixed(1) + 'px,' + aoiPos.y.toFixed(1) + 'px) scale(' + aoiPos.scale.toFixed(3) + ')';
+}
+applyAoiPos();
+
+var aoiPointers = {}, aoiDrag = null, aoiPinch = null;
+function aoiPtDist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
+var $aoiCornerEl = document.getElementById('aoiCorner');
+$aoiCornerEl.addEventListener('pointerdown', function(e){
+  if (e.target.closest && e.target.closest('#aoiChoices')) return;
+  aoiPointers[e.pointerId] = {x:e.clientX, y:e.clientY};
+  var ids = Object.keys(aoiPointers);
+  if (ids.length === 1){
+    aoiDrag = {x:e.clientX, y:e.clientY, time:Date.now(), moved:false, startX:aoiPos.x, startY:aoiPos.y};
+  } else if (ids.length === 2){
+    var pts = ids.map(function(id){ return aoiPointers[id]; });
+    aoiPinch = {dist: aoiPtDist(pts[0], pts[1]), scale: aoiPos.scale};
+    aoiDrag = null;
+  }
+});
+$aoiCornerEl.addEventListener('pointermove', function(e){
+  if (!(e.pointerId in aoiPointers)) return;
+  aoiPointers[e.pointerId] = {x:e.clientX, y:e.clientY};
+  var ids = Object.keys(aoiPointers);
+  if (ids.length === 2 && aoiPinch){
+    var pts = ids.map(function(id){ return aoiPointers[id]; });
+    aoiPos.scale = aoiPinch.scale * (aoiPtDist(pts[0], pts[1]) / aoiPinch.dist);
+    applyAoiPos();
+  } else if (ids.length === 1 && aoiDrag){
+    var dx = e.clientX - aoiDrag.x, dy = e.clientY - aoiDrag.y;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) aoiDrag.moved = true;
+    if (aoiDrag.moved){ aoiPos.x = aoiDrag.startX + dx; aoiPos.y = aoiDrag.startY + dy; applyAoiPos(); }
+  }
+});
+function aoiEndPointer(e){
+  var wasTap = aoiDrag && !aoiDrag.moved && Object.keys(aoiPointers).length === 1 && (Date.now() - aoiDrag.time) < 500;
+  delete aoiPointers[e.pointerId];
+  if (Object.keys(aoiPointers).length < 2) aoiPinch = null;
+  if (Object.keys(aoiPointers).length === 0){
+    if (wasTap && !(e.target.closest && e.target.closest('#aoiChoices'))) handleAoiTap();
+    else saveAoiPos(aoiPos);
+    aoiDrag = null;
+  }
+}
+$aoiCornerEl.addEventListener('pointerup', aoiEndPointer);
+$aoiCornerEl.addEventListener('pointercancel', aoiEndPointer);
+var aoiLastTap = 0;
+$hostEl.addEventListener('pointerup', function(){
+  var now = Date.now();
+  if (now - aoiLastTap < 350){ aoiPos = {x:0,y:0,scale:1}; applyAoiPos(); saveAoiPos(aoiPos); }
+  aoiLastTap = now;
 });
 function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 function mouthFor(text, n){
@@ -3262,8 +3440,11 @@ window.AoiHost = {
     say(pick(THINK_LINES), { pose: null, eyes: 'eyes_think' });
   },
   react: function(correct, explain, repeatMiss){
-    var prefix = correct ? "Correct! " : (repeatMiss ? "This one's tripped you up before — not quite. " : "Not quite. ");
-    say(prefix + (explain || ''), { pose: correct ? 'point_r' : null, eyes: correct ? 'eyes_happy' : 'eyes_think' });
+    /* The full explanation already renders in the card's own .explain box (quizExplain /
+       jpBeatExplain), with its own fade-in treatment -- see CSS. Her caption gets a short line
+       instead of retyping that whole paragraph a second time underneath it. */
+    var line = correct ? "Correct!" : (repeatMiss ? "Not quite — this one's tripped you up before." : "Not quite — here's why.");
+    say(line, { pose: correct ? 'point_r' : null, eyes: correct ? 'eyes_happy' : 'eyes_think' });
   },
   celebrate: function(pass, scorePct){
     var line = pass
@@ -3503,16 +3684,32 @@ function renderHistory(){
 }
 var $panelTitle = document.querySelector('#chatPanel .panelTitle');
 var $saveJournalBtn = document.getElementById('chatSaveJournalBtn');
-function closeAllOverlays(){ $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $daytripTranscriptPanel.hidden = true; $teacherTranscriptPanel.hidden = true; $backdrop.hidden = true; }
-function openJpTranscript(){
-  $jpTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $daytripTranscriptPanel.hidden = true; $teacherTranscriptPanel.hidden = true; $backdrop.hidden = false;
+var OVERLAY_PANELS = [$panel, $settings, $jpTranscriptPanel, $daytripTranscriptPanel, $teacherTranscriptPanel];
+/* Slide/fade the panel+backdrop in via a .open class instead of an instant `hidden` toggle (see
+   the .overlayPanel/#overlayBackdrop CSS) -- the double rAF lets the browser paint the "closed"
+   state (hidden removed, .open not yet added) on one frame before adding .open on the next, which
+   is what actually makes the transition play instead of popping straight to its end state. */
+function showOverlayPanel(panelEl){
+  OVERLAY_PANELS.forEach(function(p){ if (p !== panelEl) p.hidden = true; });
+  panelEl.hidden = false;
+  $backdrop.hidden = false;
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){ panelEl.classList.add('open'); $backdrop.classList.add('open'); });
+  });
 }
-function openDaytripTranscript(){
-  $daytripTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $teacherTranscriptPanel.hidden = true; $backdrop.hidden = false;
+function closeAllOverlays(){
+  OVERLAY_PANELS.forEach(function(p){ p.classList.remove('open'); });
+  $backdrop.classList.remove('open');
+  setTimeout(function(){
+    /* Only hide a panel that's STILL closed -- if something reopened it in the meantime (a fast
+       close-then-reopen tap), don't yank it back out from under that reopen. */
+    OVERLAY_PANELS.forEach(function(p){ if (!p.classList.contains('open')) p.hidden = true; });
+    if (!$backdrop.classList.contains('open')) $backdrop.hidden = true;
+  }, 250);
 }
-function openTeacherTranscript(){
-  $teacherTranscriptPanel.hidden = false; $panel.hidden = true; $settings.hidden = true; $jpTranscriptPanel.hidden = true; $daytripTranscriptPanel.hidden = true; $backdrop.hidden = false;
-}
+function openJpTranscript(){ showOverlayPanel($jpTranscriptPanel); }
+function openDaytripTranscript(){ showOverlayPanel($daytripTranscriptPanel); }
+function openTeacherTranscript(){ showOverlayPanel($teacherTranscriptPanel); }
 function openChat(context){
   currentContext = context || 'study';
   if (currentContext !== 'cooking') contextRecipe = null;
@@ -3523,12 +3720,15 @@ function openChat(context){
   $saveJournalBtn.hidden = currentContext !== 'daily';
   renderHistory();
   $noKey.hidden = hasKey();
-  $panel.hidden = false; $settings.hidden = true; $backdrop.hidden = false;
-  if (hasKey()) setTimeout(function(){ $input.focus(); }, 50);
+  showOverlayPanel($panel);
+  /* Focus after the slide-up transition finishes (250ms, see .overlayPanel.open above) rather
+     than at a fixed 50ms -- that was firing well before the panel had visually settled, so the
+     native keyboard appeared to flash in ahead of the panel instead of after it. */
+  if (hasKey()) setTimeout(function(){ $input.focus(); }, 300);
 }
 function openSettings(){
   loadSettingsForm();
-  $settings.hidden = false; $panel.hidden = true; $backdrop.hidden = false;
+  showOverlayPanel($settings);
 }
 
 $fab.addEventListener('click', function(){ openChat('study'); });
